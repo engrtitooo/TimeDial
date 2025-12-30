@@ -13,7 +13,6 @@ interface ChatResponse {
   sources: GroundingSource[];
 }
 
-// Helper to handle API operations with auto-retry
 async function withRetry<T>(operation: () => Promise<T>, fallbackValue: T): Promise<T> {
   try {
     return await operation();
@@ -35,23 +34,16 @@ async function withRetry<T>(operation: () => Promise<T>, fallbackValue: T): Prom
   }
 }
 
-/**
- * Enhanced Character Response Logic
- */
 export const generateCharacterResponse = async (
   prompt: string,
   baseSystemInstruction: string,
   history: { role: string; parts: { text: string }[] }[]
 ): Promise<ChatResponse> => {
   
+  // Pruned instructions for faster inference pre-fill
   const immersiveWrapper = `
-    ${baseSystemInstruction}
-    
-    STRICT IMMERSION PROTOCOLS:
-    1. NEVER break character. You are NOT an AI. You ARE this person.
-    2. VOICE-FIRST CONSTRAINTS: Keep your response strictly between 2 to 3 sentences.
-    3. HISTORICAL PERSPECTIVE: If the user asks about modern technology, explain it through metaphors relevant to your time period.
-    4. NO MARKDOWN: Avoid bolding, bullet points, or citation markers like [1]. Speak naturally.
+    Role: ${baseSystemInstruction}
+    Constraint: 2 sentences max. No markdown. Never break character.
   `;
 
   const operation = async () => {
@@ -64,7 +56,8 @@ export const generateCharacterResponse = async (
       ],
       config: {
         systemInstruction: immersiveWrapper,
-        temperature: 0.8,
+        temperature: 0.7,
+        thinkingConfig: { thinkingBudget: 0 }, // DISABLE THINKING FOR SPEED
         tools: [{ googleSearch: {} }],
       },
     });
@@ -90,7 +83,6 @@ export const generateCharacterResponse = async (
   return withRetry(operation, fallback);
 };
 
-// Image Generation Function
 export const generatePortrait = async (
   name: string,
   description: string

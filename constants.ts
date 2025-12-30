@@ -1,7 +1,8 @@
 
 import { Character } from './types';
 
-export const GEMINI_MODEL_CHAT = 'gemini-3-pro-preview';
+// Performance Hack: Flash is significantly faster than Pro for real-time demos
+export const GEMINI_MODEL_CHAT = 'gemini-3-flash-preview'; 
 export const GEMINI_MODEL_IMAGE = 'gemini-2.5-flash-image'; 
 
 export const FALLBACK_AVATARS: Record<string, string> = {
@@ -17,7 +18,7 @@ export const CHARACTERS: Character[] = [
     description: 'The father of relativity.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Albert_Einstein_Head.jpg/400px-Albert_Einstein_Head.jpg', 
     systemPrompt: 'You are Albert Einstein. Speak with a warm, slightly eccentric German demeanor. You are deeply curious about the universe.',
-    voiceId: 'erXwobaYiN019atpAt6h', // Antoni (Fixed case-sensitivity)
+    voiceId: 'erXwobaYiN019atpAt6h', // Antoni
     greeting: "Greetings! I was just pondering the curvature of spacetime. What is on your mind?",
     theme: {
       primaryColor: 'text-indigo-400',

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { CHARACTERS, FALLBACK_AVATARS } from './constants';
 import { Character, Message, AppState } from './types';
@@ -6,7 +5,7 @@ import { CharacterPortal } from './components/CharacterPortal';
 import { Controls } from './components/Controls';
 import { Transcript } from './components/Transcript';
 import { TimeParticles } from './components/TimeParticles';
-import { generateCharacterResponse, generatePortrait } from './services/gemini';
+import { generateCharacterResponse } from './services/gemini';
 import { generateElevenLabsSpeech } from './services/elevenlabs';
 
 type ViewMode = 'LOBBY' | 'ROOM';
@@ -16,70 +15,25 @@ export default function App() {
   const [selectedCharId, setSelectedCharId] = useState<string | null>(null);
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [showSettings, setShowSettings] = useState(false);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
-  const [isSecureVisible, setIsSecureVisible] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
-  
-  const [elevenLabsKey, setElevenLabsKey] = useState<string>(() => {
-    return localStorage.getItem('elevenlabs_api_key') || sessionStorage.getItem('elevenlabs_api_key') || '';
-  });
-  const [persistKey, setPersistKey] = useState<boolean>(() => {
-    return localStorage.getItem('elevenlabs_api_key') !== null;
-  });
-  
-  const [generatedAvatars, setGeneratedAvatars] = useState<Record<string, string>>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('timedial_avatars');
-        return saved ? JSON.parse(saved) : {};
-      } catch (e) { return {}; }
-    }
-    return {};
-  });
-  
-  const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
-  
+
+  // Note: Local avatar caching removed effectively as we no longer generate avatars on client
+  // and server-side image generation is currently disabled/placeholder.
+
   const recognitionRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
   const currentCharacter = CHARACTERS.find(c => c.id === selectedCharId) || CHARACTERS[0];
-  const activeAvatarUrl = currentCharacter ? (generatedAvatars[currentCharacter.id] || currentCharacter.avatarUrl || FALLBACK_AVATARS[currentCharacter.id]) : '';
-
-  const checkGoogleKey = async (force = false) => {
-    if (typeof window !== 'undefined' && window.aistudio?.openSelectKey) {
-        try {
-            const hasKey = await window.aistudio.hasSelectedApiKey();
-            if (!hasKey || force) {
-              await window.aistudio.openSelectKey();
-            }
-        } catch (e) { console.error("Error checking Google API Key:", e); }
-    }
-  };
-
-  useEffect(() => {
-    checkGoogleKey();
-  }, []);
-
-  const handleKeySave = (newKey: string, shouldPersist: boolean) => {
-    setElevenLabsKey(newKey);
-    setPersistKey(shouldPersist);
-    setVoiceError(null); 
-    if (shouldPersist) {
-      localStorage.setItem('elevenlabs_api_key', newKey);
-      sessionStorage.removeItem('elevenlabs_api_key');
-    } else {
-      sessionStorage.setItem('elevenlabs_api_key', newKey);
-      localStorage.removeItem('elevenlabs_api_key');
-    }
-  };
+  // Fallback to static URLs only since we removed client-side generation
+  const activeAvatarUrl = currentCharacter ? (currentCharacter.avatarUrl || FALLBACK_AVATARS[currentCharacter.id]) : '';
 
   const initAudio = () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     if (audioContextRef.current?.state === 'suspended') {
-        audioContextRef.current.resume();
+      audioContextRef.current.resume();
     }
   };
 
@@ -95,7 +49,7 @@ export default function App() {
 
     source.connect(newAnalyser);
     newAnalyser.connect(ctx.destination);
-    
+
     source.onended = () => {
       setAppState(AppState.IDLE);
       setAnalyser(null);
@@ -105,16 +59,17 @@ export default function App() {
   };
 
   const triggerCharacterSpeech = async (text: string, char: Character) => {
-    if (!elevenLabsKey || !audioContextRef.current) {
+    if (!audioContextRef.current) {
       setAppState(AppState.IDLE);
       return;
     }
-    
+
     try {
+      // Keys are now handled on backend, passed empty string or ignored
       const audioBuffer = await generateElevenLabsSpeech(
-        text, 
-        char.voiceId, 
-        elevenLabsKey, 
+        text,
+        char.voiceId,
+        "",
         audioContextRef.current
       );
       if (audioBuffer) {
@@ -125,18 +80,14 @@ export default function App() {
       }
     } catch (e: any) {
       console.error("Speech Error:", e);
-      setVoiceError(e.message || "ElevenLabs Connection Failed.");
+      setVoiceError("Voice Service Unavailable");
       setAppState(AppState.IDLE);
-      if (e.message.includes("key") || e.message.includes("quota") || e.message.includes("found")) {
-        setShowSettings(true);
-      }
     }
   };
 
   const handleMessageSubmit = async (text: string) => {
     if (!text.trim() || appState !== AppState.IDLE) return;
     initAudio();
-    await checkGoogleKey();
 
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -167,38 +118,29 @@ export default function App() {
     };
     setMessages(prev => [...prev, aiMsg]);
 
-    if (elevenLabsKey) {
-        await triggerCharacterSpeech(aiText, currentCharacter);
-    } else {
-        setAppState(AppState.IDLE);
-    }
+    await triggerCharacterSpeech(aiText, currentCharacter);
   };
 
   const enterRoom = async (charId: string) => {
-    initAudio(); 
-    await checkGoogleKey();
-    
+    initAudio();
+
     setSelectedCharId(charId);
     setMessages([]);
     setVoiceError(null);
     setViewMode('ROOM');
-    
+
     const char = CHARACTERS.find(c => c.id === charId);
     if (char) {
-        const welcomeMsg: Message = {
-            id: 'welcome',
-            role: 'model',
-            text: char.greeting,
-            timestamp: Date.now()
-        };
-        setMessages([welcomeMsg]);
-        setAppState(AppState.THINKING); 
-        
-        if (elevenLabsKey) {
-            await triggerCharacterSpeech(char.greeting, char);
-        } else {
-            setAppState(AppState.IDLE);
-        }
+      const welcomeMsg: Message = {
+        id: 'welcome',
+        role: 'model',
+        text: char.greeting,
+        timestamp: Date.now()
+      };
+      setMessages([welcomeMsg]);
+      setAppState(AppState.THINKING);
+
+      await triggerCharacterSpeech(char.greeting, char);
     }
   };
 
@@ -213,11 +155,11 @@ export default function App() {
         handleMessageSubmit(event.results[0][0].transcript);
       };
       recognitionRef.current.onerror = () => setAppState(AppState.IDLE);
-      recognitionRef.current.onend = () => { 
-        if(appState === AppState.LISTENING) setAppState(AppState.IDLE); 
+      recognitionRef.current.onend = () => {
+        if (appState === AppState.LISTENING) setAppState(AppState.IDLE);
       };
     }
-  }, [currentCharacter, messages, appState, elevenLabsKey]);
+  }, [currentCharacter, messages, appState]);
 
   const startListening = useCallback(() => {
     initAudio();
@@ -241,139 +183,74 @@ export default function App() {
     setVoiceError(null);
   };
 
-  const SettingsModal = () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4">
-      <div className="bg-[#0a0a1a] border border-amber-500/20 p-8 rounded-3xl w-full max-w-lg shadow-[0_0_50px_rgba(245,158,11,0.15)] animate-in zoom-in duration-300">
-        <div className="flex justify-between items-center mb-8">
-           <h2 className="text-2xl font-serif text-white tracking-widest uppercase">Encryption Vault</h2>
-           <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/30">
-              <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-           </div>
-        </div>
-        
-        <div className="space-y-8">
-           <div className="space-y-4">
-             <div className="flex justify-between items-end">
-               <label className="text-[10px] text-slate-400 uppercase tracking-[0.3em] font-bold">ElevenLabs Key (Voice Engine)</label>
-               <button onClick={() => setIsSecureVisible(!isSecureVisible)} className="text-[9px] text-amber-500/70 hover:text-amber-400 uppercase tracking-widest">
-                 {isSecureVisible ? 'Hide' : 'Show'}
-               </button>
-             </div>
-             <input 
-               type={isSecureVisible ? "text" : "password"}
-               value={elevenLabsKey}
-               onChange={(e) => handleKeySave(e.target.value, persistKey)}
-               placeholder="XI-API-KEY..."
-               className={`w-full bg-black/60 border ${voiceError ? 'border-red-500/50' : 'border-slate-800'} rounded-2xl px-6 py-4 text-sm text-amber-100 focus:border-amber-500/50 outline-none font-mono transition-all`}
-             />
-             {voiceError && (
-               <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                 <p className="text-[10px] text-red-400 font-bold tracking-wider uppercase">
-                   Signal Interference: {voiceError}
-                 </p>
-               </div>
-             )}
-             <div className="flex items-center gap-3 p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10">
-                <input type="checkbox" id="persist-toggle" checked={persistKey} onChange={(e) => handleKeySave(elevenLabsKey, e.target.checked)} className="w-4 h-4 rounded border-amber-500/30 bg-black text-amber-500" />
-                <label htmlFor="persist-toggle" className="text-[11px] text-slate-300 cursor-pointer">Remember this key locally</label>
-             </div>
-           </div>
-
-           <div className="pt-8 border-t border-slate-800/50 space-y-4">
-               <label className="text-[10px] text-slate-400 uppercase tracking-[0.3em] font-bold block">Temporal Key (Gemini)</label>
-               <button onClick={() => checkGoogleKey(true)} className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/5 rounded-2xl px-6 py-4 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-3 transition-all">
-                 <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
-                 Change Gemini Key
-               </button>
-           </div>
-        </div>
-
-        <button onClick={() => setShowSettings(false)} className="w-full mt-10 px-6 py-4 bg-gradient-to-r from-amber-600 to-amber-500 text-black font-black rounded-2xl font-serif uppercase tracking-[0.2em] text-[10px] shadow-lg active:scale-[0.98]">
-          Sync Time Stream
-        </button>
-      </div>
-    </div>
-  );
-
   if (viewMode === 'LOBBY') {
     return (
-        <div className="min-h-screen bg-[#050510] text-slate-200 flex flex-col items-center justify-center relative overflow-hidden font-sans">
-            <TimeParticles color="#64748b" />
-            <button onClick={() => setShowSettings(true)} className="absolute top-8 right-8 z-20 p-3 text-slate-400 hover:text-white bg-white/5 rounded-2xl border border-white/5 group">
-              <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            </button>
-            {showSettings && <SettingsModal />}
-            <div className="z-10 text-center mb-16 animate-fade-in-down px-4">
-                <h1 className="text-7xl md:text-9xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-500 to-amber-700 drop-shadow-2xl mb-6 tracking-tighter">TIMEDIAL</h1>
-                <p className="text-slate-500 uppercase tracking-[0.6em] text-[10px] md:text-xs opacity-80">Synchronize with Historical Frequencies</p>
-                {!elevenLabsKey && (
-                  <button onClick={() => setShowSettings(true)} className="mt-6 flex items-center gap-2 mx-auto px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full text-[9px] text-amber-400 hover:bg-amber-500/20 animate-pulse transition-all tracking-widest uppercase font-bold">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                    ElevenLabs Offline (Enter Key)
-                  </button>
-                )}
-            </div>
-            <div className="z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-6 max-w-7xl">
-                {CHARACTERS.map(char => {
-                   const displayUrl = generatedAvatars[char.id] || char.avatarUrl || FALLBACK_AVATARS[char.id];
-                   return (
-                       <button key={char.id} onClick={() => enterRoom(char.id)} className="group relative h-[450px] w-full md:w-64 rounded-3xl overflow-hidden border border-white/5 transition-all duration-700 hover:-translate-y-4 hover:shadow-[0_20px_60px_-15px_rgba(251,191,36,0.3)] bg-slate-900/40">
-                            <div className={`absolute inset-0 bg-gradient-to-b ${char.theme.gradient} opacity-90 group-hover:opacity-100 transition-opacity`}></div>
-                            {displayUrl && <img src={displayUrl} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-all scale-100 group-hover:scale-105 duration-1000 mix-blend-overlay" alt={char.name} />}
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#050510] via-transparent to-transparent opacity-80"></div>
-                            <div className="absolute bottom-0 left-0 right-0 p-8 text-left">
-                                <h3 className={`text-2xl font-serif font-bold ${char.theme.primaryColor} mb-2 transition-all transform group-hover:translate-x-1`}>{char.name}</h3>
-                                <p className="text-[10px] text-white/60 uppercase tracking-widest font-black mb-1">{char.role}</p>
-                                <p className="text-[9px] text-white/30 uppercase tracking-[0.3em] font-mono">{char.era}</p>
-                            </div>
-                            <div className={`absolute inset-0 border-2 border-transparent group-hover:${char.theme.borderStyle} transition-all rounded-3xl duration-500`}></div>
-                       </button>
-                   );
-                })}
-            </div>
+      <div className="min-h-screen bg-[#050510] text-slate-200 flex flex-col items-center justify-center relative overflow-hidden font-sans">
+        <TimeParticles color="#64748b" />
+        <div className="z-10 text-center mb-16 animate-fade-in-down px-4">
+          <h1 className="text-7xl md:text-9xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-500 to-amber-700 drop-shadow-2xl mb-6 tracking-tighter">TIMEDIAL</h1>
+          <p className="text-slate-500 uppercase tracking-[0.6em] text-[10px] md:text-xs opacity-80">Synchronize with Historical Frequencies</p>
         </div>
+        <div className="z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-6 max-w-7xl">
+          {CHARACTERS.map(char => {
+            const displayUrl = char.avatarUrl || FALLBACK_AVATARS[char.id];
+            return (
+              <button key={char.id} onClick={() => enterRoom(char.id)} className="group relative h-[450px] w-full md:w-64 rounded-3xl overflow-hidden border border-white/5 transition-all duration-700 hover:-translate-y-4 hover:shadow-[0_20px_60px_-15px_rgba(251,191,36,0.3)] bg-slate-900/40">
+                <div className={`absolute inset-0 bg-gradient-to-b ${char.theme.gradient} opacity-90 group-hover:opacity-100 transition-opacity`}></div>
+                {displayUrl && <img src={displayUrl} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-all scale-100 group-hover:scale-105 duration-1000 mix-blend-overlay" alt={char.name} />}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050510] via-transparent to-transparent opacity-80"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-8 text-left">
+                  <h3 className={`text-2xl font-serif font-bold ${char.theme.primaryColor} mb-2 transition-all transform group-hover:translate-x-1`}>{char.name}</h3>
+                  <p className="text-[10px] text-white/60 uppercase tracking-widest font-black mb-1">{char.role}</p>
+                  <p className="text-[9px] text-white/30 uppercase tracking-[0.3em] font-mono">{char.era}</p>
+                </div>
+                <div className={`absolute inset-0 border-2 border-transparent group-hover:${char.theme.borderStyle} transition-all rounded-3xl duration-500`}></div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     );
   }
 
   return (
     <div className={`min-h-screen flex flex-col relative overflow-hidden transition-colors duration-1000 ${currentCharacter.theme.gradient}`}>
-      {showSettings && <SettingsModal />}
       <TimeParticles color={currentCharacter.theme.particleColor} />
       <header className="p-8 flex justify-between items-center z-10">
-         <button onClick={backToLobby} className="flex items-center gap-3 text-white/40 hover:text-white transition-all group">
-             <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-amber-500/20 group-hover:text-amber-400 group-hover:scale-105 transition-all border border-white/5 group-hover:border-amber-500/30">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-             </div>
-             <span className="text-[10px] uppercase tracking-[0.3em] hidden md:inline font-black">Disconnect Stream</span>
-         </button>
-         <div className="flex items-center gap-6">
-             {voiceError && (
-               <button onClick={() => setShowSettings(true)} className="text-[9px] font-bold text-red-400 uppercase tracking-widest animate-pulse border border-red-500/30 px-3 py-1 rounded-full bg-red-500/5">
-                 Interface Calibration Error
-               </button>
-             )}
-             <div className={`text-[10px] font-black px-6 py-2.5 rounded-2xl border bg-black/60 backdrop-blur-xl ${currentCharacter.theme.borderStyle} ${currentCharacter.theme.primaryColor} shadow-2xl tracking-[0.2em]`}>
-               <span className="animate-pulse mr-3">●</span> {currentCharacter.era}
-             </div>
-         </div>
+        <button onClick={backToLobby} className="flex items-center gap-3 text-white/40 hover:text-white transition-all group">
+          <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-amber-500/20 group-hover:text-amber-400 group-hover:scale-105 transition-all border border-white/5 group-hover:border-amber-500/30">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          </div>
+          <span className="text-[10px] uppercase tracking-[0.3em] hidden md:inline font-black">Disconnect Stream</span>
+        </button>
+        <div className="flex items-center gap-6">
+          {voiceError && (
+            <div className="text-[9px] font-bold text-red-400 uppercase tracking-widest animate-pulse border border-red-500/30 px-3 py-1 rounded-full bg-red-500/5">
+              {voiceError}
+            </div>
+          )}
+          <div className={`text-[10px] font-black px-6 py-2.5 rounded-2xl border bg-black/60 backdrop-blur-xl ${currentCharacter.theme.borderStyle} ${currentCharacter.theme.primaryColor} shadow-2xl tracking-[0.2em]`}>
+            <span className="animate-pulse mr-3">●</span> {currentCharacter.era}
+          </div>
+        </div>
       </header>
       <main className="flex-1 flex flex-col items-center justify-center relative w-full max-w-6xl mx-auto px-6">
-        <CharacterPortal 
-          character={currentCharacter} 
-          appState={appState} 
-          avatarUrl={activeAvatarUrl} 
-          isGeneratingAvatar={isGeneratingAvatar} 
-          analyser={analyser} 
+        <CharacterPortal
+          character={currentCharacter}
+          appState={appState}
+          avatarUrl={activeAvatarUrl}
+          isGeneratingAvatar={false}
+          analyser={analyser}
         />
         <Transcript messages={messages} />
         <div className="w-full mt-auto mb-12">
-            <Controls 
-              appState={appState} 
-              onSendMessage={handleMessageSubmit} 
-              onStartListening={startListening} 
-              onStopListening={stopListening} 
-              character={currentCharacter} 
-            />
+          <Controls
+            appState={appState}
+            onSendMessage={handleMessageSubmit}
+            onStartListening={startListening}
+            onStopListening={stopListening}
+            character={currentCharacter}
+          />
         </div>
       </main>
     </div>

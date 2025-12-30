@@ -5,6 +5,7 @@
 ![ElevenLabs](https://img.shields.io/badge/Voice_AI-ElevenLabs_v2.5-black?logo=google-cloud&style=for-the-badge)
 ![Imagen](https://img.shields.io/badge/Visuals-Gemini_Imagen-34A853?logo=google-play&style=for-the-badge)
 ![React](https://img.shields.io/badge/Frontend-React_19_%2B_Vite-61DAFB?logo=react&style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 [**🎥 WATCH THE DEMO VIDEO**](#) *(Link coming soon)*
 
@@ -116,6 +117,12 @@ npm run dev
 ```
 
 Visit `http://localhost:5173` in your browser. Allow microphone access, choose a character, and start talking!
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 

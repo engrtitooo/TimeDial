@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Modality } from "@google/genai";
 import { GEMINI_MODEL_CHAT, GEMINI_MODEL_IMAGE, GEMINI_MODEL_TTS } from '../constants';
 import { GroundingSource } from '../types';
@@ -42,45 +43,49 @@ async function decodePcmToAudioBuffer(
   return buffer;
 }
 
-// Helper to handle API operations with auto-retry for API Key selection
+// Helper to handle API operations with auto-retry
 async function withRetry<T>(operation: () => Promise<T>, fallbackValue: T): Promise<T> {
   try {
     return await operation();
   } catch (error: any) {
     const errorMessage = error?.toString() || "";
-    
-    const isKeyError = 
-      errorMessage.includes("API key") || 
-      errorMessage.includes("Requested entity was not found") || 
-      errorMessage.includes("403") ||
-      errorMessage.includes("404");
+    const isKeyError = errorMessage.includes("API key") || errorMessage.includes("403") || errorMessage.includes("404");
 
-    if (
-      isKeyError &&
-      typeof window !== 'undefined' &&
-      window.aistudio
-    ) {
-      console.warn("API Key issue detected. Triggering selection...");
+    if (isKeyError && typeof window !== 'undefined' && window.aistudio) {
+      console.warn("API Key issue detected.");
       try {
         await window.aistudio.openSelectKey();
         return await operation();
       } catch (retryError) {
-        console.error("Retry failed after key selection:", retryError);
+        console.error("Retry failed:", retryError);
       }
     }
-    
     console.error("Gemini API Error:", error);
     return fallbackValue;
   }
 }
 
-// Chat Function with Search Grounding & Thinking Config
+/**
+ * Enhanced Character Response Logic
+ * Injects immersion constraints to ensure historical fidelity and audio-friendly length.
+ */
 export const generateCharacterResponse = async (
   prompt: string,
-  systemInstruction: string,
+  baseSystemInstruction: string,
   history: { role: string; parts: { text: string }[] }[]
 ): Promise<ChatResponse> => {
   
+  const immersiveWrapper = `
+    ${baseSystemInstruction}
+    
+    STRICT IMMERSION PROTOCOLS:
+    1. NEVER break character. You are NOT an AI. You ARE this person.
+    2. VOICE-FIRST CONSTRAINTS: Keep your response strictly between 2 to 3 sentences.
+    3. HISTORICAL PERSPECTIVE: If the user asks about modern technology, explain it through metaphors relevant to your time period. (e.g., Internet = Global Telegraph, AI = Mechanical Thinking Engine).
+    4. NO MARKDOWN: Avoid bolding, bullet points, or citation markers like [1]. Speak naturally.
+    5. Be direct, warm, and stay true to your historical voice.
+  `;
+
   const operation = async () => {
     const ai = getAI();
     const response = await ai.models.generateContent({
@@ -90,24 +95,20 @@ export const generateCharacterResponse = async (
         { role: 'user', parts: [{ text: prompt }] }
       ],
       config: {
-        systemInstruction: systemInstruction,
-        temperature: 0.7,
+        systemInstruction: immersiveWrapper,
+        temperature: 0.8,
         tools: [{ googleSearch: {} }],
-        thinkingConfig: { thinkingBudget: 16384 } // Enable thinking for deeper historical reasoning
+        thinkingConfig: { thinkingBudget: 0 } // Zero thinking budget for faster voice-first responses
       },
     });
 
-    const text = response.text || "I am lost in thought...";
-    
+    const text = response.text || "I am momentarily speechless...";
     const sources: GroundingSource[] = [];
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
     
     chunks.forEach(chunk => {
       if (chunk.web?.uri && chunk.web?.title) {
-        sources.push({
-          title: chunk.web.title,
-          url: chunk.web.uri
-        });
+        sources.push({ title: chunk.web.title, url: chunk.web.uri });
       }
     });
 
@@ -115,47 +116,11 @@ export const generateCharacterResponse = async (
   };
 
   const fallback: ChatResponse = { 
-    text: "The connection to the timeline is flickering... please ensure your Temporal Key (API Key) is valid.", 
+    text: "The temporal link is failing. Ensure your key is valid.", 
     sources: [] 
   };
 
   return withRetry(operation, fallback);
-};
-
-// Gemini Native TTS Function
-export const generateSpeech = async (
-  text: string,
-  voiceName: string,
-  audioContext: AudioContext
-): Promise<AudioBuffer | null> => {
-  
-  const operation = async () => {
-    const ai = getAI();
-    // Clean text of citation markers for smoother speech
-    const speechText = text.replace(/\[\d+\]/g, '').replace(/\*/g, '');
-
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL_TTS,
-      contents: [{ parts: [{ text: speechText }] }],
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: voiceName },
-          },
-        },
-      },
-    });
-
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (base64Audio) {
-      const audioData = decodeBase64(base64Audio);
-      return await decodePcmToAudioBuffer(audioData, audioContext, 24000, 1);
-    }
-    return null;
-  };
-
-  return withRetry(operation, null);
 };
 
 // Image Generation Function
@@ -163,26 +128,14 @@ export const generatePortrait = async (
   name: string,
   description: string
 ): Promise<string | null> => {
-  
   const operation = async () => {
     const ai = getAI();
-    const prompt = `A museum-grade, highly detailed historical oil painting portrait of ${name}, ${description}. Dramatic chiaroscuro lighting, visible brushstrokes, renaissance masterpiece style. Professional color grading.`;
+    const prompt = `Highly detailed historical painting portrait of ${name}, ${description}. Dramatic lighting, renaissance masterpiece style.`;
     
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL_IMAGE,
-      contents: [
-        {
-          parts: [
-            { text: prompt }
-          ],
-        },
-      ],
-      config: {
-        imageConfig: {
-          aspectRatio: "1:1",
-          imageSize: "1K"
-        }
-      }
+      contents: [{ parts: [{ text: prompt }] }],
+      config: { imageConfig: { aspectRatio: "1:1", imageSize: "1K" } }
     });
 
     const parts = response.candidates?.[0]?.content?.parts || [];
@@ -193,6 +146,5 @@ export const generatePortrait = async (
     }
     return null;
   };
-
   return withRetry(operation, null);
 };

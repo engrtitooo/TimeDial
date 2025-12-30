@@ -1,0 +1,7 @@
+{
+  "name": "TimeDial: Immersive History",
+  "description": "A museum-grade historical roleplay experience featuring real-time voice interaction with historical figures powered by Gemini 3.0 Pro and Gemini TTS.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

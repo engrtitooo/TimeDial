@@ -3,7 +3,6 @@ import { Character } from './types';
 
 export const GEMINI_MODEL_CHAT = 'gemini-3-pro-preview';
 export const GEMINI_MODEL_IMAGE = 'gemini-2.5-flash-image'; 
-export const GEMINI_MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
 export const FALLBACK_AVATARS: Record<string, string> = {
   da_vinci: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Francesco_Melzi_-_Portrait_of_Leonardo_-_WGA14795.jpg/509px-Francesco_Melzi_-_Portrait_of_Leonardo_-_WGA14795.jpg'
@@ -18,7 +17,7 @@ export const CHARACTERS: Character[] = [
     description: 'The father of relativity.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Albert_Einstein_Head.jpg/400px-Albert_Einstein_Head.jpg', 
     systemPrompt: 'You are Albert Einstein. Speak with a warm, slightly eccentric German demeanor. You are deeply curious about the universe.',
-    voiceId: 'pNInz6obpg8nEmeWvMoX', // Josh (Deep, professorial)
+    voiceId: 'erXwobaYiN019atpAt6h', // Antoni (Fixed case-sensitivity)
     greeting: "Greetings! I was just pondering the curvature of spacetime. What is on your mind?",
     theme: {
       primaryColor: 'text-indigo-400',
@@ -36,7 +35,7 @@ export const CHARACTERS: Character[] = [
     description: 'The last active ruler of the Ptolemaic Kingdom.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Kleopatra-VII.-Altes-Museum-Berlin1.jpg/400px-Kleopatra-VII.-Altes-Museum-Berlin1.jpg',
     systemPrompt: 'You are Cleopatra. You speak with regal authority and intelligence. You are a shrewd diplomat.',
-    voiceId: 'EXAVITQu4vr4xnSDxMaL', // Bella (Authoritative, elegant)
+    voiceId: '21m00Tcm4TbcDqxh8Wy8', // Rachel
     greeting: "You stand before Cleopatra, Queen of Kings. Speak, and I shall listen.",
     theme: {
       primaryColor: 'text-amber-400',
@@ -54,7 +53,7 @@ export const CHARACTERS: Character[] = [
     description: 'Painter, engineer, scientist.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Francesco_Melzi_-_Portrait_of_Leonardo_-_WGA14795.jpg/509px-Francesco_Melzi_-_Portrait_of_Leonardo_-_WGA14795.jpg',
     systemPrompt: 'You are Leonardo da Vinci. You are obsessed with observation. You speak with artistic flair.',
-    voiceId: 'IKne3meq5pS7M9H9MEbX', // Charlie (Thoughtful, Italian-adjacent resonance)
+    voiceId: 'TxGEqnSnt8f3vAnI0v90', // Josh
     greeting: "Ah, welcome. I was just sketching the flight of birds. Tell me, what do you wish to create?",
     theme: {
       primaryColor: 'text-orange-300',
@@ -72,7 +71,7 @@ export const CHARACTERS: Character[] = [
     description: 'Mathematician & Visionary.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/400px-Ada_Lovelace_portrait.jpg',
     systemPrompt: 'You are Ada Lovelace. You speak with poetic science. You are visionary and precise.',
-    voiceId: 'Lcf7eeY9feMwBoW9GaM0', // Emily (British, intellectual)
+    voiceId: 'EXAVITQu4vr4xnSDxMaL', // Bella
     greeting: "The Analytical Engine of my mind is whirring. Shall we compute something beautiful together?",
     theme: {
       primaryColor: 'text-cyan-400',

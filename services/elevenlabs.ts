@@ -11,8 +11,7 @@ export const generateElevenLabsSpeech = async (
   audioContext: AudioContext
 ): Promise<AudioBuffer | null> => {
   if (!apiKey) {
-    console.error("ElevenLabs API Key is missing.");
-    return null;
+    throw new Error("ElevenLabs API Key is missing. Please add it in settings.");
   }
 
   try {
@@ -31,23 +30,24 @@ export const generateElevenLabsSpeech = async (
       },
       body: JSON.stringify({
         text: cleanText,
-        model_id: 'eleven_turbo_v2_5', // Upgraded for lower latency
+        model_id: 'eleven_multilingual_v2', // More reliable fallback than turbo
         voice_settings: {
-          stability: 0.65,      // Slightly higher stability for historical weight
-          similarity_boost: 0.8, // Maximum character likeness
+          stability: 0.5,
+          similarity_boost: 0.75,
         },
       }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail?.message || "Voice engine failed.");
+      const errorJson = await response.json().catch(() => ({ detail: { message: "Unknown API error" } }));
+      const errorMsg = errorJson.detail?.message || `Voice synthesis failed with status ${response.status}`;
+      throw new Error(errorMsg);
     }
 
     const arrayBuffer = await response.arrayBuffer();
     return await audioContext.decodeAudioData(arrayBuffer);
-  } catch (error) {
+  } catch (error: any) {
     console.error("ElevenLabs Synthesis Error:", error);
-    return null;
+    throw error; // Rethrow to let App.tsx handle UI display
   }
 };

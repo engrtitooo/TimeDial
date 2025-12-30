@@ -1,29 +1,67 @@
-# TimeDial ⏳📞
-> **Immersive Real-Time History Teacher powered by Unified Gemini 3.0 AI.**
+# ⏳ TimeDial: Immersive History Teacher
+### *Talk to history, face-to-face.*
 
-![Gemini 3.0 Pro](https://img.shields.io/badge/Logic-Gemini_3.0_Pro-blue?logo=google&style=for-the-badge)
-![Gemini TTS](https://img.shields.io/badge/Voice-Gemini_Native_TTS-white?logo=google-cloud&style=for-the-badge)
-![Gemini Imagen](https://img.shields.io/badge/Visuals-Gemini_2.5_Flash_Image-34A853?logo=google-play&style=for-the-badge)
-![React](https://img.shields.io/badge/Frontend-React_19_%2B_Vite-61DAFB?logo=react&style=for-the-badge)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Google Cloud](https://img.shields.io/badge/Google_Cloud-Vertex_AI-blue?style=for-the-badge&logo=googlecloud)
+![Gemini 3.0](https://img.shields.io/badge/AI_Model-Gemini_3.0_Pro-4285F4?style=for-the-badge&logo=google)
+![ElevenLabs](https://img.shields.io/badge/Voice_Engine-ElevenLabs_v3-orange?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Live_&_Deployed-success?style=for-the-badge)
+
+## 🚀 Links & Demo
+- **🎥 3-Minute Demo Video:** [INSERT YOUR YOUTUBE/LOOM LINK HERE]
+- **🔴 Live App:** [INSERT YOUR GOOGLE CLOUD RUN URL HERE]
+- **📂 Devpost Submission:** [INSERT DEVPOST LINK HERE]
+
+---
+
+## 🏆 Hackathon Track Alignment
+We are submitting **TimeDial** to the following tracks:
+
+### 1. Google Cloud Track (Vertex AI)
+* **Integration:** We utilize **Google Vertex AI** to access the exclusive **Gemini 3.0 Pro** model.
+* **Why it matters:** Unlike standard chat apps, we leverage Gemini 3.0's superior **reasoning and roleplay capabilities** to maintain deep, historically accurate personas (Einstein, Cleopatra) that never break character, even when asked complex modern questions.
+* **Infrastructure:** The entire application is containerized with **Docker** and deployed on **Google Cloud Run** for serverless scalability.
+
+### 2. ElevenLabs Track (Conversational AI)
+* **Integration:** We use the latest **ElevenLabs v3 model** (via Python SDK) for ultra-low latency voice generation.
+* **Voice-First Experience:** The app is designed as a "Voice-First" interface. We implemented a streaming architecture where Gemini's text response is immediately converted to audio, allowing users to have a fluid, natural conversation with history.
+* **Emotional Range:** We utilized specific "Style Prompts" to give Einstein a thoughtful, slow-paced German accent and Cleopatra a commanding, regal tone.
 
 ---
 
-## 🏛️ The Experience
-TimeDial shatters the "textbook barrier" by letting users talk directly to historical figures using a unified, native Google AI stack. By eliminating third-party voice dependencies, we achieve deeper multimodal cohesion and a more stable historical frequency.
+## 💡 What it does
+TimeDial is an educational time machine. Instead of reading boring textbooks, students can "dial in" a historical figure and have a real-time voice conversation.
+* **Real-time Voice:** Speak to the app, and it speaks back instantly.
+* **Visual Immersion:** The UI pulses and reacts to the character's voice frequency.
+* **Fact-Checking:** Powered by Gemini's grounding to ensure historical accuracy.
 
-## ⚙️ Architecture
-TimeDial uses the **Gemini 3.0 Pro** engine for high-fidelity reasoning and **Gemini 2.5 Flash** models for low-latency sensory output (Voice & Image):
+## 🛠️ Tech Stack
+* **AI Brain:** Google Vertex AI (Gemini 3.0 Pro)
+* **Voice:** ElevenLabs API (Turbo v2.5 / Multilingual v3)
+* **Backend:** Python FastAPI (Async/Await)
+* **Frontend:** HTML5, TailwindCSS, Vanilla JS
+* **DevOps:** Docker, Google Cloud Run
 
-1.  **Cognitive Engine:** Gemini 3.0 Pro (with 16K Thinking Budget) for historical accuracy.
-2.  **Native TTS:** Gemini 2.5 Flash Preview TTS for human-like emotional intonation without external keys.
-3.  **Visual Reconstruction:** Gemini 2.5 Flash Image for generating period-accurate oil portraits.
-4.  **Search Grounding:** Live factual verification via Google Search integration.
+## ⚙️ How to Run Locally
+1. **Clone the repo:**
+   ```bash
+   git clone https://github.com/engrtitooo/TimeDial.git
+   cd TimeDial
+   ```
 
-## 🚀 Usage
-1.  Obtain a **Google Gemini API Key** from [aistudio.google.com](https://aistudio.google.com).
-2.  Launch the app and enter your key in the secure TimeDial selection dialog.
-3.  Choose a historical figure and begin the conversation.
+2. **Set up Environment Variables:**
+Create a `.env` file with your keys:
+```env
+GOOGLE_PROJECT_ID=your_project_id
+ELEVENLABS_API_KEY=your_api_key
+PORT=8080
+```
 
----
-*Built for the future of education.*
+3. **Run with Docker:**
+```bash
+docker build -t timedial .
+docker run -p 8080:8080 --env-file .env timedial
+```
+
+## 📜 License
+
+MIT License - Open Source for the AI Partner Catalyst Hackathon.

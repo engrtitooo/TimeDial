@@ -1,5 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
-import { GEMINI_MODEL_CHAT, GEMINI_MODEL_IMAGE } from '../constants';
+import { GoogleGenAI, Modality } from "@google/genai";
+import { GEMINI_MODEL_CHAT, GEMINI_MODEL_IMAGE, GEMINI_MODEL_TTS } from '../constants';
 import { GroundingSource } from '../types';
 
 // Safely retrieve the AI instance.
@@ -10,6 +10,36 @@ const getAI = () => {
 interface ChatResponse {
   text: string;
   sources: GroundingSource[];
+}
+
+// PCM Audio Decoding Utilities
+function decodeBase64(base64: string): Uint8Array {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+async function decodePcmToAudioBuffer(
+  data: Uint8Array,
+  ctx: AudioContext,
+  sampleRate: number = 24000,
+  numChannels: number = 1
+): Promise<AudioBuffer> {
+  const dataInt16 = new Int16Array(data.buffer);
+  const frameCount = dataInt16.length / numChannels;
+  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+
+  for (let channel = 0; channel < numChannels; channel++) {
+    const channelData = buffer.getChannelData(channel);
+    for (let i = 0; i < frameCount; i++) {
+      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+    }
+  }
+  return buffer;
 }
 
 // Helper to handle API operations with auto-retry for API Key selection
@@ -30,7 +60,7 @@ async function withRetry<T>(operation: () => Promise<T>, fallbackValue: T): Prom
       typeof window !== 'undefined' &&
       window.aistudio
     ) {
-      console.warn("API Key entity not found or invalid. Triggering key selection...");
+      console.warn("API Key issue detected. Triggering selection...");
       try {
         await window.aistudio.openSelectKey();
         return await operation();
@@ -44,7 +74,7 @@ async function withRetry<T>(operation: () => Promise<T>, fallbackValue: T): Prom
   }
 }
 
-// Chat Function with Search Grounding
+// Chat Function with Search Grounding & Thinking Config
 export const generateCharacterResponse = async (
   prompt: string,
   systemInstruction: string,
@@ -63,6 +93,7 @@ export const generateCharacterResponse = async (
         systemInstruction: systemInstruction,
         temperature: 0.7,
         tools: [{ googleSearch: {} }],
+        thinkingConfig: { thinkingBudget: 16384 } // Enable thinking for deeper historical reasoning
       },
     });
 
@@ -84,11 +115,47 @@ export const generateCharacterResponse = async (
   };
 
   const fallback: ChatResponse = { 
-    text: "My connection to the timeline is fading... (System Error: API Key)", 
+    text: "The connection to the timeline is flickering... please ensure your Temporal Key (API Key) is valid.", 
     sources: [] 
   };
 
   return withRetry(operation, fallback);
+};
+
+// Gemini Native TTS Function
+export const generateSpeech = async (
+  text: string,
+  voiceName: string,
+  audioContext: AudioContext
+): Promise<AudioBuffer | null> => {
+  
+  const operation = async () => {
+    const ai = getAI();
+    // Clean text of citation markers for smoother speech
+    const speechText = text.replace(/\[\d+\]/g, '').replace(/\*/g, '');
+
+    const response = await ai.models.generateContent({
+      model: GEMINI_MODEL_TTS,
+      contents: [{ parts: [{ text: speechText }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: voiceName },
+          },
+        },
+      },
+    });
+
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (base64Audio) {
+      const audioData = decodeBase64(base64Audio);
+      return await decodePcmToAudioBuffer(audioData, audioContext, 24000, 1);
+    }
+    return null;
+  };
+
+  return withRetry(operation, null);
 };
 
 // Image Generation Function
@@ -99,7 +166,7 @@ export const generatePortrait = async (
   
   const operation = async () => {
     const ai = getAI();
-    const prompt = `A highly detailed, photorealistic historical oil painting portrait of ${name}, ${description}. The subject is facing forward, looking at the viewer. Museum quality fine art, dramatic lighting.`;
+    const prompt = `A museum-grade, highly detailed historical oil painting portrait of ${name}, ${description}. Dramatic chiaroscuro lighting, visible brushstrokes, renaissance masterpiece style. Professional color grading.`;
     
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL_IMAGE,

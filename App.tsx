@@ -5,8 +5,7 @@ import { CharacterPortal } from './components/CharacterPortal';
 import { Controls } from './components/Controls';
 import { Transcript } from './components/Transcript';
 import { TimeParticles } from './components/TimeParticles';
-import { generateCharacterResponse, generatePortrait } from './services/gemini';
-import { generateSpeech } from './services/elevenlabs';
+import { generateCharacterResponse, generatePortrait, generateSpeech } from './services/gemini';
 
 type ViewMode = 'LOBBY' | 'ROOM';
 
@@ -48,7 +47,6 @@ export default function App() {
     }
   };
 
-  // Mandatory key check on mount as per Gemini 3 requirements
   useEffect(() => {
     checkGoogleKey();
   }, []);
@@ -144,7 +142,6 @@ export default function App() {
     const source = ctx.createBufferSource();
     source.buffer = buffer;
 
-    // Create Analyser for reactivity
     const newAnalyser = ctx.createAnalyser();
     newAnalyser.fftSize = 256;
     setAnalyser(newAnalyser);
@@ -227,30 +224,26 @@ export default function App() {
       <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl">
         <h2 className="text-xl font-serif text-white mb-4 text-center">Timeline Configuration</h2>
         <div className="mb-6 space-y-4">
-           <div className="p-3 bg-amber-900/10 border border-amber-800/30 rounded-lg">
-             <h3 className="text-sm font-semibold text-amber-300 mb-1">Quantum Stream Status</h3>
-             <p className="text-xs text-slate-400">Stable connection established with the historical continuum.</p>
+           <div className="p-3 bg-amber-900/10 border border-amber-800/30 rounded-lg text-center">
+             <h3 className="text-sm font-semibold text-amber-300 mb-1">Quantum Engine: Gemini 3.0 Pro</h3>
+             <p className="text-[10px] text-slate-400">Speech & Logic now unified via native Gemini modalities.</p>
            </div>
            {typeof window !== 'undefined' && window.aistudio && (
              <div className="space-y-3">
-               <p className="text-[10px] text-slate-500 uppercase tracking-widest text-center">Gemini API Key Management</p>
+               <p className="text-[10px] text-slate-500 uppercase tracking-widest text-center">Temporal Key Management</p>
                <button 
                  onClick={() => checkGoogleKey(true)}
                  className="w-full bg-amber-600/20 hover:bg-amber-600/40 text-amber-100 border border-amber-500/30 rounded-xl px-4 py-3 text-sm transition-all flex items-center justify-center gap-2 group"
                >
                  <svg className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                 Change Gemini API Key
+                 Change API Key
                </button>
-               <p className="text-[9px] text-slate-600 text-center italic">
-                 Requires a paid GCP project with billing enabled. 
-                 <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="text-amber-700 hover:text-amber-500 ml-1 underline">Docs</a>
-               </p>
              </div>
            )}
         </div>
         <button 
           onClick={() => setShowSettings(false)} 
-          className="w-full px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors border border-slate-700"
+          className="w-full px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors border border-slate-700 font-serif"
         >
           Return to Time Stream
         </button>

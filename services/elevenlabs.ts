@@ -3,7 +3,8 @@
 
 export const generateSpeech = async (
   text: string,
-  voiceId: string
+  voiceId: string,
+  audioContext: AudioContext
 ): Promise<AudioBuffer | null> => {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   
@@ -43,10 +44,9 @@ export const generateSpeech = async (
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    const outputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     
-    // Decode the MP3 stream
-    const audioBuffer = await outputAudioContext.decodeAudioData(arrayBuffer);
+    // Use the passed AudioContext to decode
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
     return audioBuffer;
 
   } catch (error) {

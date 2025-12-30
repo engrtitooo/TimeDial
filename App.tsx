@@ -158,12 +158,15 @@ export default function App() {
 
     // 3. TTS
     setAppState(AppState.SPEAKING);
-    const audioBuffer = await generateSpeech(aiText, currentCharacter.voiceId);
-
-    if (audioBuffer && audioContextRef.current) {
-      playAudio(audioBuffer);
+    if (audioContextRef.current) {
+        const audioBuffer = await generateSpeech(aiText, currentCharacter.voiceId, audioContextRef.current);
+        if (audioBuffer) {
+            playAudio(audioBuffer);
+        } else {
+            setTimeout(() => setAppState(AppState.IDLE), 2000);
+        }
     } else {
-      setTimeout(() => setAppState(AppState.IDLE), 2000);
+        setTimeout(() => setAppState(AppState.IDLE), 2000);
     }
   };
 
@@ -237,11 +240,13 @@ export default function App() {
         setAppState(AppState.THINKING);
         setTimeout(async () => {
              setAppState(AppState.SPEAKING);
-             const audioBuffer = await generateSpeech(char.greeting, char.voiceId);
-             if (audioBuffer && audioContextRef.current) {
-                 playAudio(audioBuffer);
-             } else {
-                 setAppState(AppState.IDLE);
+             if (audioContextRef.current) {
+                 const audioBuffer = await generateSpeech(char.greeting, char.voiceId, audioContextRef.current);
+                 if (audioBuffer) {
+                     playAudio(audioBuffer);
+                 } else {
+                     setAppState(AppState.IDLE);
+                 }
              }
         }, 800);
     }

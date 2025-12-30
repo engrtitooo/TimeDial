@@ -3,7 +3,6 @@ import { GEMINI_MODEL_CHAT, GEMINI_MODEL_IMAGE } from '../constants';
 import { GroundingSource } from '../types';
 
 // Safely retrieve the AI instance.
-// Exclusively uses process.env.API_KEY as requested.
 const getAI = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
@@ -13,14 +12,13 @@ interface ChatResponse {
   sources: GroundingSource[];
 }
 
-// Helper to handle API operations with auto-retry for API Key selection (via AI Studio popup if available)
+// Helper to handle API operations with auto-retry for API Key selection
 async function withRetry<T>(operation: () => Promise<T>, fallbackValue: T): Promise<T> {
   try {
     return await operation();
   } catch (error: any) {
     const errorMessage = error?.toString() || "";
     
-    // Check if the error is due to an invalid/missing API key context
     const isKeyError = 
       errorMessage.includes("API key") || 
       errorMessage.includes("Requested entity was not found") || 
@@ -34,9 +32,7 @@ async function withRetry<T>(operation: () => Promise<T>, fallbackValue: T): Prom
     ) {
       console.warn("API Key entity not found or invalid. Triggering key selection...");
       try {
-        // Trigger the key selection dialog
         await window.aistudio.openSelectKey();
-        // Retry the operation immediately after selection
         return await operation();
       } catch (retryError) {
         console.error("Retry failed after key selection:", retryError);
@@ -66,13 +62,12 @@ export const generateCharacterResponse = async (
       config: {
         systemInstruction: systemInstruction,
         temperature: 0.7,
-        tools: [{ googleSearch: {} }], // Enable Search for "Smart" responses
+        tools: [{ googleSearch: {} }],
       },
     });
 
     const text = response.text || "I am lost in thought...";
     
-    // Extract Grounding Metadata (Sources)
     const sources: GroundingSource[] = [];
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
     
@@ -116,11 +111,13 @@ export const generatePortrait = async (
         },
       ],
       config: {
-        // High quality generation config
+        imageConfig: {
+          aspectRatio: "1:1",
+          imageSize: "1K"
+        }
       }
     });
 
-    // Iterate through parts to find the image
     const parts = response.candidates?.[0]?.content?.parts || [];
     for (const part of parts) {
       if (part.inlineData && part.inlineData.data) {

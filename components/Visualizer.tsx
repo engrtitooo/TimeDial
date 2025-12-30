@@ -3,9 +3,10 @@ import React, { useEffect, useRef } from 'react';
 interface VisualizerProps {
   isPlaying: boolean;
   color?: string;
+  analyser?: AnalyserNode | null;
 }
 
-export const Visualizer: React.FC<VisualizerProps> = ({ isPlaying, color = '#f59e0b' }) => {
+export const Visualizer: React.FC<VisualizerProps> = ({ isPlaying, color = '#f59e0b', analyser }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
 
@@ -16,30 +17,42 @@ export const Visualizer: React.FC<VisualizerProps> = ({ isPlaying, color = '#f59
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size
     canvas.width = canvas.parentElement?.offsetWidth || 300;
     canvas.height = canvas.parentElement?.offsetHeight || 100;
 
-    let bars = 50;
+    const bars = 40;
     const barWidth = canvas.width / bars;
+    const dataArray = new Uint8Array(analyser ? analyser.frequencyBinCount : bars);
     
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       if (isPlaying) {
+        if (analyser) {
+          analyser.getByteFrequencyData(dataArray);
+        }
+
         for (let i = 0; i < bars; i++) {
-          // Generate pseudo-random heights to simulate voice activity
-          const height = Math.random() * (canvas.height * 0.8);
+          let height;
+          if (analyser) {
+            // Map frequency data to bar height
+            const value = dataArray[i * Math.floor(dataArray.length / bars)];
+            height = (value / 255) * canvas.height * 0.9;
+          } else {
+            // Fallback random
+            height = Math.random() * (canvas.height * 0.8);
+          }
+          
           const x = i * barWidth;
           const y = (canvas.height - height) / 2;
           
           ctx.fillStyle = color;
-          // Add some transparency for glass look
           ctx.globalAlpha = 0.6;
-          ctx.fillRect(x, y, barWidth - 2, height);
+          ctx.beginPath();
+          ctx.roundRect(x + 1, y, barWidth - 3, height, 4);
+          ctx.fill();
         }
       } else {
-         // Flat line when idle
          ctx.fillStyle = color;
          ctx.globalAlpha = 0.2;
          ctx.fillRect(0, canvas.height / 2 - 1, canvas.width, 2);
@@ -53,7 +66,7 @@ export const Visualizer: React.FC<VisualizerProps> = ({ isPlaying, color = '#f59
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [isPlaying, color]);
+  }, [isPlaying, color, analyser]);
 
   return (
     <canvas 

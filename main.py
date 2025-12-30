@@ -42,14 +42,16 @@ async def speech_endpoint(request: SpeechRequest):
         print(f"Speech Endpoint Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Mount headers or other static files if needed? 
-# The user asked for professional server-side architecture. 
-# Usually in dev we run Vite separately. In prod we might serve dist.
-# For now, let's strictly serve the API.
-
 @app.get("/health")
 def health_check():
     return {"status": "ok", "service": "TimeDial Backend"}
+
+# --- Serve Frontend (Must be last) ---
+# Mount static assets (JS/CSS)
+if os.path.exists("dist"):
+    app.mount("/", StaticFiles(directory="dist", html=True), name="static")
+else:
+    print("WARNING: 'dist' directory not found. Frontend will not be served.")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

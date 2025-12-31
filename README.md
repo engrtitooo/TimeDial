@@ -7,10 +7,8 @@
 ![Status](https://img.shields.io/badge/Status-Live_&_Deployed-success?style=for-the-badge)
 
 ## 🚀 Links & Demo
-- **🎥 3-Minute Demo Video:** [INSERT YOUR YOUTUBE/LOOM LINK HERE]
-- **🔴 Live App:** [https://timedial-app-456115331802.us-central1.run.app](https://timedial-app-456115331802.us-central1.run.app)
-- **📂 Devpost Submission:** [INSERT DEVPOST LINK HERE]
 
+- **🔴 Live App:** [https://timedial-app-456115331802.us-central1.run.app](https://timedial-app-456115331802.us-central1.run.app)
 ---
 
 ## 🏆 Hackathon Track Alignment

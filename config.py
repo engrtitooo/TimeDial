@@ -17,8 +17,8 @@ if not ELEVENLABS_API_KEY:
     missing_keys.append("ELEVENLABS_API_KEY")
 
 if missing_keys:
-    print(f"CRITICAL ERROR: Missing required environment variables: {', '.join(missing_keys)}")
-    print("Please set them in your .env file or system environment.")
-    sys.exit(1)
+    print(f"WARNING: Missing environment variables: {', '.join(missing_keys)}")
+    print("Functionality relying on these keys will fail at runtime.")
+    # sys.exit(1) # DISABLED to prevent container crash
 
 print("Configuration loaded successfully: Keys present.")

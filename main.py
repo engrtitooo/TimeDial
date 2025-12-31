@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Response, Request
+from fastapi import FastAPI, Response, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -11,6 +11,7 @@ import traceback
 
 app = FastAPI(title="TimeDial Backend")
 
+# CORS Setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,24 +23,24 @@ app.add_middleware(
 @app.post("/speech")
 async def generate_speech(request: Request):
     try:
+        # 1. Parse Input
         data = await request.json()
         text = data.get("text", "")
-        # Remove any potential whitespace from voiceId
         voice_id = str(data.get("voiceId") or "ozS9N1i8sNqA3YvH014P").strip()
         
-        # KEY VERIFICATION LOGIC
+        # 2. Get and Clean API Key
         raw_key = os.getenv("ELEVENLABS_API_KEY")
         if not raw_key:
-            print("CRITICAL: ELEVENLABS_API_KEY is NULL in environment variables.")
-            return JSONResponse(status_code=500, content={"detail": "API_KEY_MISSING_ON_SERVER"})
+            return JSONResponse(status_code=500, content={"detail": "SERVER_ERROR: API_KEY_MISSING_IN_ENV"})
         
-        # Masked logging to verify key in Cloud Run Logs
-        clean_key = raw_key.strip()
-        print(f"DEBUG: Key found. Starts with '{clean_key[:4]}' and ends with '{clean_key[-4:]}'")
+        api_key = raw_key.strip()
+        # MASKED LOGGING: Check Google Cloud Logs to verify these match your dashboard key
+        print(f"DEBUG AUTH: Key found. Starts with '{api_key[:4]}' and ends with '{api_key[-4:]}'", flush=True)
 
+        # 3. Request Preparation
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         headers = {
-            "xi-api-key": clean_key,
+            "xi-api-key": api_key,
             "Content-Type": "application/json",
             "Accept": "audio/mpeg"
         }
@@ -49,11 +50,14 @@ async def generate_speech(request: Request):
             "voice_settings": {"stability": 0.5, "similarity_boost": 0.5}
         }).encode("utf-8")
 
+        # 4. Direct API Call
         req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
         
         try:
             with urllib.request.urlopen(req) as response:
                 audio_content = response.read()
+                
+                # 5. Delivery Fix
                 return Response(
                     content=audio_content,
                     media_type="audio/mpeg",
@@ -64,18 +68,17 @@ async def generate_speech(request: Request):
                     }
                 )
         except urllib.error.HTTPError as e:
-            error_msg = e.read().decode()
-            # If you see 401 here, your key is definitely wrong
+            error_body = e.read().decode()
+            print(f"ELEVENLABS ERROR ({e.code}): {error_body}", flush=True)
             return JSONResponse(
                 status_code=e.code, 
-                content={"detail": f"ElevenLabs API Error: {e.code}", "raw_response": error_msg}
+                content={"detail": f"ElevenLabs API Error: {e.code}", "api_response": error_body}
             )
 
     except Exception as e:
-        return JSONResponse(
-            status_code=500, 
-            content={"detail": "Internal Crash", "message": str(e), "trace": traceback.format_exc()}
-        )
+        full_trace = traceback.format_exc()
+        print(f"BACKEND CRASH:\n{full_trace}", flush=True)
+        return JSONResponse(status_code=500, content={"detail": str(e), "trace": full_trace})
 
 # Serve Frontend
 if os.path.exists("dist"):

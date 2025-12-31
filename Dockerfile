@@ -26,4 +26,4 @@ COPY --from=frontend-builder /app/dist ./dist
 EXPOSE 8080
 
 # Run FastAPI app
-CMD ["python", "run.py"]
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}

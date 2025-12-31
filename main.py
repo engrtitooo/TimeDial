@@ -24,11 +24,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Services
-gemini_service = GeminiService()
+# Initialize Services (Global placeholder)
+gemini_service = None
+
+@app.on_event("startup")
+async def startup_event():
+    global gemini_service
+    print("STARTUP: Initializing backend services...", flush=True)
+    try:
+        gemini_service = GeminiService()
+        print("STARTUP: GeminiService initialized successfully.", flush=True)
+    except Exception as e:
+        print(f"STARTUP ERROR: Failed to init GeminiService: {e}", flush=True)
+        # We do NOT exit here, to keep the container alive for logs/health checks
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
+    global gemini_service
+    if not gemini_service:
+         raise HTTPException(status_code=503, detail="Service initializing or failed to start.")
+    try:
     try:
         response = await gemini_service.generate_response(request)
         return response

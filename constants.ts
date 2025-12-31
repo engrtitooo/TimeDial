@@ -14,9 +14,9 @@ export const CHARACTERS: Character[] = [
     id: 'einstein',
     name: 'Albert Einstein',
     role: 'Theoretical Physicist',
-    bio: 'Theoretical physicist and Nobel Prize winner. The mind behind Relativity.',
+    bio: 'A mature, deep, and steady male voice that reflects a calm and thoughtful personality. It has a professional yet gentle tone, suitable for a wise scientist.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Einstein_1921_by_F_Schmutzer_-_restoration.jpg/800px-Einstein_1921_by_F_Schmutzer_-_restoration.jpg',
-    voiceId: 'ozS9N1i8sNqA3YvH014P', // Mature/Deep Male
+    voiceId: 'ozS9N1i8sNqA3YvH014P', // Custom Mature Male
     systemPrompt: 'You are Albert Einstein. Speak with wisdom, curiosity, and a slight German accent in your text phrasing. Explain complex physics simply.',
     theme: {
       primaryColor: 'text-amber-400',
@@ -30,9 +30,9 @@ export const CHARACTERS: Character[] = [
     id: 'cleopatra',
     name: 'Cleopatra VII',
     role: 'Pharaoh of Egypt',
-    bio: 'The last active ruler of the Ptolemaic Kingdom of Egypt. Icon of intelligence and power.',
+    bio: 'An elegant, confident, and assertive female voice. It conveys the authority of a powerful ruler with a sophisticated and commanding tone.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Alexandre_Cabanel_-_Cleopatra_testing_poisons_on_condemned_prisoners_%281887%29.jpg',
-    voiceId: 'EXAVITQu4vr4xnSDxMaL', // Elegant/Assertive Female
+    voiceId: 'EXAVITQu4vr4xnSDxMaL', // Bella (Elegant/Assertive)
     systemPrompt: 'You are Cleopatra. Speak with regal authority, intelligence, and charm. You are a shrewd political strategist.',
     theme: {
       primaryColor: 'text-amber-400',
@@ -46,10 +46,10 @@ export const CHARACTERS: Character[] = [
     id: 'da_vinci',
     name: 'Leonardo da Vinci',
     role: 'Renaissance Polymath',
-    bio: 'Renaissance polymath: painter, sculptor, architect, and inventor of genius.',
+    bio: 'A wise, warm, and mature male voice. It carries a sense of curiosity and seasoned experience, fitting for the ultimate Renaissance polymath.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Francesco_Melzi_-_Portrait_of_Leonardo.png/800px-Francesco_Melzi_-_Portrait_of_Leonardo.png',
     systemPrompt: 'You are Leonardo da Vinci. Speak with insatiable curiosity, artistic sensitivity, and deep wisdom.',
-    voiceId: 'bV7ZiwrtW9sS2WZZziwrt', // Wise Male
+    voiceId: 'pNInz6obpgDQGcFmaJgB', // Adam (Deep/Wise/Narration)
     greeting: "Ah, welcome. I was just sketching the flight of birds. Tell me, what do you wish to create?",
     theme: {
       primaryColor: 'text-orange-300',
@@ -63,11 +63,10 @@ export const CHARACTERS: Character[] = [
     id: 'lovelace',
     name: 'Ada Lovelace',
     role: 'First Programmer',
-    era: '1815 – 1852',
-    description: 'Mathematician & Visionary.',
+    bio: 'A sharp, intelligent female voice with a clear British accent. It sounds visionary and precise, capturing her persona as a mathematical pioneer.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/400px-Ada_Lovelace_portrait.jpg',
+    voiceId: 'ThT5KcBeYPX3keUQqHPh', // Dorothy (Clear British Female)
     systemPrompt: 'You are Ada Lovelace. You speak with poetic science. You are visionary and precise.',
-    voiceId: 'Lcf7W5oW9sS2WZZziwrt', // British Female
     greeting: "The Analytical Engine of my mind is whirring. Shall we compute something beautiful together?",
     theme: {
       primaryColor: 'text-cyan-400',

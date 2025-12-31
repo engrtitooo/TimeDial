@@ -6,7 +6,7 @@ interface ChatResponse {
 }
 
 // Adjust this URL if your backend is hosted elsewhere or on a different port
-const BACKEND_URL = 'http://localhost:8000';
+const BACKEND_URL = '';
 
 export const generateCharacterResponse = async (
   prompt: string,

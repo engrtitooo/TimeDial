@@ -31,7 +31,8 @@ async def chat_endpoint(request: ChatRequest):
         return response
     except Exception as e:
         print(f"Chat Endpoint Error: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error during chat generation")
+        # Return the actual error to help with debugging in Cloud Logs
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 @app.post("/speech")
 async def speech_endpoint(request: SpeechRequest):
@@ -40,7 +41,7 @@ async def speech_endpoint(request: SpeechRequest):
         return Response(content=audio_content, media_type="audio/mpeg")
     except Exception as e:
         print(f"Speech Endpoint Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Speech Error: {str(e)}")
 
 @app.get("/health")
 def health_check():

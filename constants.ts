@@ -67,7 +67,7 @@ export const CHARACTERS: Character[] = [
     description: 'Mathematician & Visionary.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/400px-Ada_Lovelace_portrait.jpg',
     systemPrompt: 'You are Ada Lovelace. You speak with poetic science. You are visionary and precise.',
-    voiceId: 'EXAVITQu4vr4xnSDxMaL', // Bella
+    voiceId: 'Lcf7W5oW9sS2WZZziwrt', // British Female
     greeting: "The Analytical Engine of my mind is whirring. Shall we compute something beautiful together?",
     theme: {
       primaryColor: 'text-cyan-400',

@@ -11,7 +11,6 @@ import traceback
 
 app = FastAPI(title="TimeDial Backend")
 
-# CORS Setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,24 +22,19 @@ app.add_middleware(
 @app.post("/speech")
 async def generate_speech(request: Request):
     try:
-        # 1. Parse Input
         data = await request.json()
         text = data.get("text", "")
+        # Fallback to Einstein ID if none provided
         voice_id = str(data.get("voiceId") or "ozS9N1i8sNqA3YvH014P").strip()
         
-        # 2. Get and Clean API Key
-        raw_key = os.getenv("ELEVENLABS_API_KEY")
-        if not raw_key:
-            return JSONResponse(status_code=500, content={"detail": "SERVER_ERROR: API_KEY_MISSING_IN_ENV"})
-        
-        api_key = raw_key.strip()
-        # MASKED LOGGING: Check Google Cloud Logs to verify these match your dashboard key
-        print(f"DEBUG AUTH: Key found. Starts with '{api_key[:4]}' and ends with '{api_key[-4:]}'", flush=True)
+        api_key = os.getenv("ELEVENLABS_API_KEY")
+        if not api_key:
+            print("CRITICAL: ELEVENLABS_API_KEY is missing from environment variables.")
+            return JSONResponse(status_code=500, content={"detail": "API_KEY_MISSING"})
 
-        # 3. Request Preparation
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         headers = {
-            "xi-api-key": api_key,
+            "xi-api-key": api_key.strip(),
             "Content-Type": "application/json",
             "Accept": "audio/mpeg"
         }
@@ -50,14 +44,13 @@ async def generate_speech(request: Request):
             "voice_settings": {"stability": 0.5, "similarity_boost": 0.5}
         }).encode("utf-8")
 
-        # 4. Direct API Call
+        print(f"DEBUG: Sending request to ElevenLabs for voice {voice_id}")
         req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
         
         try:
             with urllib.request.urlopen(req) as response:
                 audio_content = response.read()
-                
-                # 5. Delivery Fix
+                print(f"DEBUG: Successfully received {len(audio_content)} bytes of audio")
                 return Response(
                     content=audio_content,
                     media_type="audio/mpeg",
@@ -69,18 +62,23 @@ async def generate_speech(request: Request):
                 )
         except urllib.error.HTTPError as e:
             error_body = e.read().decode()
-            print(f"ELEVENLABS ERROR ({e.code}): {error_body}", flush=True)
-            return JSONResponse(
-                status_code=e.code, 
-                content={"detail": f"ElevenLabs API Error: {e.code}", "api_response": error_body}
-            )
+            print(f"ELEVENLABS ERROR ({e.code}): {error_body}")
+            return JSONResponse(status_code=e.code, content={"detail": f"ElevenLabs Rejected: {e.code}", "raw": error_body})
 
     except Exception as e:
         full_trace = traceback.format_exc()
-        print(f"BACKEND CRASH:\n{full_trace}", flush=True)
+        print(f"BACKEND CRASH:\n{full_trace}")
         return JSONResponse(status_code=500, content={"detail": str(e), "trace": full_trace})
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 # Serve Frontend
+if os.path.exists("dist"):
+    app.mount("/", StaticFiles(directory="dist", html=True), name="static")
+
 if __name__ == "__main__":
+    # REQUIRED: Google Cloud Run sets the PORT env variable
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run("main:app", host="0.0.0.0", port=port)

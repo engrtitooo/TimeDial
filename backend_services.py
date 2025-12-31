@@ -1,12 +1,24 @@
 import json
 import httpx
-from google import genai
 from config import GOOGLE_API_KEY, ELEVENLABS_API_KEY
 from models import ChatRequest, ChatResponse, SpeechRequest, GroundingSource
+
+# Defensive Import for Gemini
+try:
+    from google import genai
+    HAS_GEMINI = True
+except ImportError as e:
+    print(f"CRITICAL WARNING: Could not import google.genai: {e}")
+    HAS_GEMINI = False
 
 # --- Gemini Service ---
 class GeminiService:
     def __init__(self):
+        self.client = None
+        if not HAS_GEMINI:
+             print("GeminiService: Library missing. Chat disabled.")
+             return
+             
         if GOOGLE_API_KEY:
             try:
                 self.client = genai.Client(api_key=GOOGLE_API_KEY)

@@ -34,11 +34,10 @@ async def chat_endpoint(request: ChatRequest):
         # Return the actual error to help with debugging in Cloud Logs
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
+import requests
+
 @app.post("/speech")
 async def speech_endpoint(request: SpeechRequest):
-    import requests
-    import os
-    
     # 1. Verify Configuration
     api_key = os.getenv("ELEVENLABS_API_KEY")
     if not api_key:

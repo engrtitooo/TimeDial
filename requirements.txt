@@ -4,5 +4,4 @@ python-dotenv
 google-genai
 httpx
 pydantic
-elevenlabs
-requests
+requests==2.31.0

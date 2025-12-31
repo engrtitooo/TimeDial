@@ -34,7 +34,9 @@ async def chat_endpoint(request: ChatRequest):
         # Return the actual error to help with debugging in Cloud Logs
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
-import requests
+import urllib.request
+import json
+import urllib.error
 
 @app.post("/speech")
 async def speech_endpoint(request: SpeechRequest):
@@ -47,10 +49,9 @@ async def speech_endpoint(request: SpeechRequest):
     try:
         # 2. Extract Data
         text = request.text.replace("*", "").strip()
-        # Fallback to a stable voice (Antoni) if ID is missing or invalid
         voice_id = request.voice_id or "ErXwobaYiN019PkySvjV" 
 
-        # 3. Direct HTTP Request (Bypassing all SDKs)
+        # 3. Setup Request (Standard Library)
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         
         headers = {
@@ -67,23 +68,28 @@ async def speech_endpoint(request: SpeechRequest):
             }
         }
 
-        print(f"DEBUG: Generating Speech for VoiceID: {voice_id}", flush=True)
+        print(f"DEBUG: Calling ElevenLabs URL (urllib): {url}", flush=True)
         
-        # 4. Synchronous but reliable request
-        response = requests.post(url, json=payload, headers=headers)
+        # Encode JSON data
+        json_data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(url, data=json_data, headers=headers)
 
-        # 5. Handle Errors Explicitly
-        if response.status_code != 200:
-            error_msg = f"ElevenLabs API Error ({response.status_code}): {response.text}"
-            print(f"CRITICAL: {error_msg}", flush=True)
-            raise HTTPException(status_code=500, detail=error_msg)
+        # 4. reliable request
+        with urllib.request.urlopen(req) as response:
+            if response.status != 200:
+                # Note: urlopen usually raises HTTPError for non-200, but checking just in case
+                print(f"CRITICAL: Non-200 status {response.status}", flush=True)
+                raise HTTPException(status_code=500, detail=f"API Error {response.status}")
+                
+            audio_content = response.read()
+            print(f"DEBUG: Audio Generated Success ({len(audio_content)} bytes)", flush=True)
+            return Response(content=audio_content, media_type="audio/mpeg")
 
-        # 6. Return Audio
-        print(f"DEBUG: Audio Generated Success ({len(response.content)} bytes)", flush=True)
-        return Response(content=response.content, media_type="audio/mpeg")
+    except urllib.error.HTTPError as e:
+        error_msg = e.read().decode('utf-8')
+        print(f"CRITICAL ElevenLabs HTTP Error {e.code}: {error_msg}", flush=True)
+        raise HTTPException(status_code=e.code, detail=f"Voice API Error: {error_msg}")
 
-    except HTTPException as he:
-        raise he
     except Exception as e:
         import traceback
         print(f"SERVER CRASH: {traceback.format_exc()}", flush=True)

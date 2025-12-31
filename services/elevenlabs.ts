@@ -20,7 +20,8 @@ export const generateElevenLabsSpeech = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Speech Backend Error: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Speech Error (${response.status}): ${errorText}`);
     }
 
     const arrayBuffer = await response.arrayBuffer();

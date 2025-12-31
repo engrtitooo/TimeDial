@@ -106,7 +106,8 @@ export default function App() {
       }
     } catch (e: any) {
       console.error("Speech Error:", e);
-      setVoiceError("Voice Service Unavailable");
+      // Show actual error or fallback
+      setVoiceError(e.message || "Voice Service Unavailable");
       setAppState(AppState.IDLE);
     }
   };
@@ -211,7 +212,7 @@ export default function App() {
 
   if (viewMode === 'LOBBY') {
     return (
-      <div className="min-h-screen bg-[#050510] text-slate-200 flex flex-col items-center justify-center relative overflow-hidden font-sans">
+      <div className="min-h-screen bg-[#050510] text-slate-200 flex flex-col items-center relative font-sans py-12 overflow-y-auto">
         <TimeParticles color="#64748b" />
         <div className="z-10 text-center mb-16 animate-fade-in-down px-4">
           <h1 className="text-7xl md:text-9xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-500 to-amber-700 drop-shadow-2xl mb-6 tracking-tighter">TIMEDIAL</h1>

@@ -94,6 +94,10 @@ class ElevenLabsService:
         
         async with httpx.AsyncClient(timeout=30.0) as client:
             # First attempt
+            # DEBUG: Check if API Key exists
+            import os
+            print(f"DEBUG: ElevenLabs Key loaded? {bool(self.api_key)}", flush=True)
+
             url = f"{self.base_url}/text-to-speech/{voice_id}"
             payload = {
                 "text": clean_text,
@@ -109,6 +113,13 @@ class ElevenLabsService:
             }
 
             resp = await client.post(url, json=payload, headers=headers)
+            
+            print(f"DEBUG: ElevenLabs API Status: {resp.status_code}", flush=True)
+
+            if resp.status_code == 401:
+                print("DEBUG: Unauthorized - Invalid API Key", flush=True)
+            elif resp.status_code == 429:
+                print("DEBUG: Quota Exceeded", flush=True)
 
             if resp.status_code == 404:
                 print(f"Voice {voice_id} not found. Attempting fallback.")
@@ -130,4 +141,5 @@ class ElevenLabsService:
                  print(f"ElevenLabs Error: {resp.status_code} - {error_msg}")
                  raise Exception(f"ElevenLabs API Error: {resp.status_code}")
 
+            print(f"DEBUG: Audio chunk size: {len(resp.content)} bytes", flush=True)
             return resp.content

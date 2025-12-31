@@ -25,6 +25,12 @@ export const generateElevenLabsSpeech = async (
     }
 
     const arrayBuffer = await response.arrayBuffer();
+    console.log("Audio Buffer received, size:", arrayBuffer.byteLength);
+
+    if (arrayBuffer.byteLength < 100) {
+      throw new Error("Received audio data is too small (likely text error).");
+    }
+
     return await audioContext.decodeAudioData(arrayBuffer);
 
   } catch (error) {

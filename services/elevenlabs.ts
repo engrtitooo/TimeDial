@@ -15,7 +15,7 @@ export const generateElevenLabsSpeech = async (
       },
       body: JSON.stringify({
         text,
-        voice_id: voiceId
+        voiceId: voiceId
       })
     });
 

@@ -43,39 +43,39 @@ import urllib.error
 async def generate_speech(request: Request):
     try:
         data = await request.json()
-        text = data.get("text", "Hello")
-        # Extract Dynamic Voice ID, fallback to Antoni (ErX...) if missing
-        voice_id = data.get("voiceId", "ErXwobaYiN019PkySvjV") 
+        text = data.get("text", "")
+        # Dynamic ID with robust fallback to Antoni
+        voice_id = data.get("voiceId") or "ErXwobaYiN019PkySvjV"
         
         api_key = os.getenv("ELEVENLABS_API_KEY")
+        # Direct URL Construction
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         
         headers = {
             "xi-api-key": api_key,
-            "Content-Type": "application/json",
-            "Accept": "audio/mpeg"
+            "Content-Type": "application/json"
         }
-        payload = json.dumps({"text": text, "model_id": "eleven_multilingual_v2"}).encode("utf-8")
+        
+        payload = json.dumps({
+            "text": text,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {"stability": 0.5, "similarity_boost": 0.5}
+        }).encode("utf-8")
 
-        # Calling ElevenLabs
+        print(f"DEBUG: Generating Speech for VoiceID: {voice_id}", flush=True)
+
         req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
         with urllib.request.urlopen(req) as response:
-            audio_data = response.read()
-            
-            # THE FIX: Direct binary response
-            return Response(
-                content=audio_data, 
-                media_type="audio/mpeg",
-                headers={
-                    "Content-Type": "audio/mpeg",
-                    "Content-Length": str(len(audio_data))
-                }
-            )
+            audio_bytes = response.read()
+            print(f"DEBUG: Received {len(audio_bytes)} bytes. Sending response...", flush=True)
+            return Response(content=audio_bytes, media_type="audio/mpeg")
 
     except Exception as e:
         import traceback
-        print(f"DELIVERY ERROR: {traceback.format_exc()}", flush=True)
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        error_info = traceback.format_exc()
+        print(f"CRASH: {error_info}", flush=True)
+        # Return FULL traceback to frontend for debugging
+        return JSONResponse(status_code=500, content={"error": str(e), "details": error_info})
 
 @app.get("/health")
 def health_check():

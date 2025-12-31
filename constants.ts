@@ -23,44 +23,43 @@ export const CHARACTERS: Character[] = [
     id: 'cleopatra',
     name: 'Cleopatra VII',
     role: 'Pharaoh of Egypt',
-    font: 'font-serif',
-    borderStyle: 'border-amber-500/40'
-  }
+    bio: 'The last active ruler of the Ptolemaic Kingdom of Egypt. Icon of intelligence and power.',
+    avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Alexandre_Cabanel_-_Cleopatra_testing_poisons_on_condemned_prisoners_%281887%29.jpg',
+    voiceId: 'EXAVITQu4vr4xnSDxMaL', // Elegant/Assertive Female
+    systemPrompt: 'You are Cleopatra. Speak with regal authority, intelligence, and charm. You are a shrewd political strategist.'
   },
-{
-  id: 'da_vinci',
+  {
+    id: 'da_vinci',
     name: 'Leonardo da Vinci',
-      role: 'Polymath',
-        era: '1452 – 1519',
-          description: 'Painter, engineer, scientist.',
-            avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Francesco_Melzi_-_Portrait_of_Leonardo_-_WGA14795.jpg/509px-Francesco_Melzi_-_Portrait_of_Leonardo_-_WGA14795.jpg',
-              systemPrompt: 'You are Leonardo da Vinci. You are obsessed with observation. You speak with artistic flair.',
-                voiceId: 'TxGEqnSnt8f3vAnI0v90', // Josh
-                  greeting: "Ah, welcome. I was just sketching the flight of birds. Tell me, what do you wish to create?",
-                    theme: {
-    primaryColor: 'text-orange-300',
+    role: 'Renaissance Polymath',
+    bio: 'Renaissance polymath: painter, sculptor, architect, and inventor of genius.',
+    avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Francesco_Melzi_-_Portrait_of_Leonardo.png/800px-Francesco_Melzi_-_Portrait_of_Leonardo.png',
+    systemPrompt: 'You are Leonardo da Vinci. Speak with insatiable curiosity, artistic sensitivity, and deep wisdom.',
+    voiceId: 'bV7ZiwrtW9sS2WZZziwrt', // Wise Male
+    greeting: "Ah, welcome. I was just sketching the flight of birds. Tell me, what do you wish to create?",
+    theme: {
+      primaryColor: 'text-orange-300',
       gradient: 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-orange-900/30 via-[#1c1917] to-black',
-        particleColor: '#fdba74',
-          font: 'font-serif',
-            borderStyle: 'border-orange-500/30'
-  }
-},
-{
-  id: 'lovelace',
+      font: 'font-serif',
+      borderStyle: 'border-orange-500/30'
+    }
+  },
+  {
+    id: 'lovelace',
     name: 'Ada Lovelace',
-      role: 'First Programmer',
-        era: '1815 – 1852',
-          description: 'Mathematician & Visionary.',
-            avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/400px-Ada_Lovelace_portrait.jpg',
-              systemPrompt: 'You are Ada Lovelace. You speak with poetic science. You are visionary and precise.',
-                voiceId: 'EXAVITQu4vr4xnSDxMaL', // Bella
-                  greeting: "The Analytical Engine of my mind is whirring. Shall we compute something beautiful together?",
-                    theme: {
-    primaryColor: 'text-cyan-400',
+    role: 'First Programmer',
+    era: '1815 – 1852',
+    description: 'Mathematician & Visionary.',
+    avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/400px-Ada_Lovelace_portrait.jpg',
+    systemPrompt: 'You are Ada Lovelace. You speak with poetic science. You are visionary and precise.',
+    voiceId: 'EXAVITQu4vr4xnSDxMaL', // Bella
+    greeting: "The Analytical Engine of my mind is whirring. Shall we compute something beautiful together?",
+    theme: {
+      primaryColor: 'text-cyan-400',
       gradient: 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-900/30 via-slate-950 to-black',
-        particleColor: '#22d3ee',
-          font: 'font-mono',
-            borderStyle: 'border-cyan-500/40'
+      particleColor: '#22d3ee',
+      font: 'font-mono',
+      borderStyle: 'border-cyan-500/40'
+    }
   }
-}
 ];

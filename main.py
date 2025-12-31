@@ -44,38 +44,37 @@ async def generate_speech(request: Request):
     try:
         data = await request.json()
         text = data.get("text", "")
-        # Dynamic ID with robust fallback to Antoni
-        voice_id = data.get("voiceId") or "ErXwobaYiN019PkySvjV"
+        voice_id = data.get("voiceId") or "ozS9N1i8sNqA3YvH014P"
         
-        api_key = os.getenv("ELEVENLABS_API_KEY")
-        # Direct URL Construction
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-        
         headers = {
-            "xi-api-key": api_key,
-            "Content-Type": "application/json"
+            "xi-api-key": os.getenv("ELEVENLABS_API_KEY"),
+            "Content-Type": "application/json",
+            "Accept": "audio/mpeg"
         }
-        
         payload = json.dumps({
             "text": text,
             "model_id": "eleven_multilingual_v2",
             "voice_settings": {"stability": 0.5, "similarity_boost": 0.5}
         }).encode("utf-8")
 
-        print(f"DEBUG: Generating Speech for VoiceID: {voice_id}", flush=True)
-
+        # Direct Byte Streaming
         req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
         with urllib.request.urlopen(req) as response:
-            audio_bytes = response.read()
-            print(f"DEBUG: Received {len(audio_bytes)} bytes. Sending response...", flush=True)
-            return Response(content=audio_bytes, media_type="audio/mpeg")
-
+            audio_content = response.read() # Read full bytes at once
+            
+            # THE CRITICAL FIX: Explicitly defined binary response
+            return Response(
+                content=audio_content,
+                media_type="audio/mpeg",
+                headers={
+                    "Content-Type": "audio/mpeg",
+                    "Content-Length": str(len(audio_content)),
+                    "Cache-Control": "no-cache"
+                }
+            )
     except Exception as e:
-        import traceback
-        error_info = traceback.format_exc()
-        print(f"CRASH: {error_info}", flush=True)
-        # Return FULL traceback to frontend for debugging
-        return JSONResponse(status_code=500, content={"error": str(e), "details": error_info})
+        return Response(content=json.dumps({"error": str(e)}), status_code=500)
 
 @app.get("/health")
 def health_check():

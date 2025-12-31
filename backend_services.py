@@ -4,9 +4,12 @@ from config import GOOGLE_API_KEY, ELEVENLABS_API_KEY
 from models import ChatRequest, ChatResponse, SpeechRequest, GroundingSource
 
 # Defensive Import for Gemini
+# Defensive Import for Gemini
 try:
-    from google import genai
-    HAS_GEMINI = True
+    # from google import genai
+    # HAS_GEMINI = True
+    print("DEBUG: Force-disabling Gemini for isolation testing.", flush=True)
+    HAS_GEMINI = False
 except ImportError as e:
     print(f"CRITICAL WARNING: Could not import google.genai: {e}")
     HAS_GEMINI = False

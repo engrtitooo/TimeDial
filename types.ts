@@ -18,7 +18,6 @@ export interface Character {
   voiceId: string;      // Added voiceId
   era?: string;
   theme: CharacterTheme;
-  greeting: string;
 }
 
 export interface GroundingSource {

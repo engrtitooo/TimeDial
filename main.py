@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
@@ -39,61 +40,48 @@ import json
 import urllib.error
 
 @app.post("/speech")
-async def speech_endpoint(request: SpeechRequest):
-    # 1. Verify Configuration
-    api_key = os.getenv("ELEVENLABS_API_KEY")
-    if not api_key:
-         print("CRITICAL: ELEVENLABS_API_KEY missing from environment", flush=True)
-         raise HTTPException(status_code=500, detail="Server Error: Missing Voice API Key")
-
+async def generate_speech(request: Request):
     try:
-        # 2. Extract Data
-        text = request.text.replace("*", "").strip()
-        voice_id = request.voice_id or "ErXwobaYiN019PkySvjV" 
-
-        # 3. Setup Request (Standard Library)
+        data = await request.json()
+        text = data.get("text", "")
+        voice_id = data.get("voiceId", "ErXwobaYiN019PkySvjV")
+        
+        api_key = os.getenv("ELEVENLABS_API_KEY")
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         
         headers = {
             "xi-api-key": api_key,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Accept": "audio/mpeg"
         }
-        
-        payload = {
+        payload = json.dumps({
             "text": text,
             "model_id": "eleven_multilingual_v2",
-            "voice_settings": {
-                "stability": 0.5, 
-                "similarity_boost": 0.75
-            }
-        }
+            "voice_settings": {"stability": 0.5, "similarity_boost": 0.5}
+        }).encode("utf-8")
 
-        print(f"DEBUG: Calling ElevenLabs URL (urllib): {url}", flush=True)
+        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
         
-        # Encode JSON data
-        json_data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(url, data=json_data, headers=headers)
+        print(f"DEBUG: Successfully sent request to ElevenLabs for text: {text[:20]}...", flush=True)
 
-        # 4. reliable request
         with urllib.request.urlopen(req) as response:
-            if response.status != 200:
-                # Note: urlopen usually raises HTTPError for non-200, but checking just in case
-                print(f"CRITICAL: Non-200 status {response.status}", flush=True)
-                raise HTTPException(status_code=500, detail=f"API Error {response.status}")
-                
-            audio_content = response.read()
-            print(f"DEBUG: Audio Generated Success ({len(audio_content)} bytes)", flush=True)
-            return Response(content=audio_content, media_type="audio/mpeg")
-
-    except urllib.error.HTTPError as e:
-        error_msg = e.read().decode('utf-8')
-        print(f"CRITICAL ElevenLabs HTTP Error {e.code}: {error_msg}", flush=True)
-        raise HTTPException(status_code=e.code, detail=f"Voice API Error: {error_msg}")
+            if response.status == 200:
+                audio_data = response.read()
+                print(f"DEBUG: Successfully read {len(audio_data)} bytes from ElevenLabs", flush=True)
+                # Return raw binary content directly
+                return Response(
+                    content=audio_data, 
+                    media_type="audio/mpeg",
+                    headers={"Content-Disposition": "attachment; filename=speech.mp3"}
+                )
+            else:
+                return JSONResponse(status_code=response.status, content={"error": "API_REJECTED"})
 
     except Exception as e:
         import traceback
-        print(f"SERVER CRASH: {traceback.format_exc()}", flush=True)
-        raise HTTPException(status_code=500, detail=f"Internal Crash: {str(e)}")
+        error_msg = traceback.format_exc()
+        print(f"CRITICAL SERVER ERROR:\n{error_msg}", flush=True)
+        return JSONResponse(status_code=500, content={"error": str(e), "trace": error_msg})
 
 @app.get("/health")
 def health_check():

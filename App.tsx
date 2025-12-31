@@ -17,6 +17,7 @@ export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [interimText, setInterimText] = useState<string>(''); // Live transcription while speaking
 
   // Note: Local avatar caching removed effectively as we no longer generate avatars on client
   // and server-side image generation is currently disabled/placeholder.
@@ -180,14 +181,45 @@ export default function App() {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
+      recognitionRef.current.continuous = true; // Keep listening until stopped
+      recognitionRef.current.interimResults = true; // Show live transcription
       recognitionRef.current.lang = 'en-US';
+      recognitionRef.current.maxAlternatives = 1;
+
       recognitionRef.current.onresult = (event: any) => {
-        handleMessageSubmit(event.results[0][0].transcript);
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        // Update interim display
+        if (interimTranscript) {
+          setInterimText(interimTranscript);
+        }
+
+        // Submit final result
+        if (finalTranscript) {
+          setInterimText('');
+          handleMessageSubmit(finalTranscript);
+          recognitionRef.current?.stop();
+        }
       };
-      recognitionRef.current.onerror = () => setAppState(AppState.IDLE);
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech Recognition Error:', event.error);
+        setInterimText('');
+        setAppState(AppState.IDLE);
+      };
+
       recognitionRef.current.onend = () => {
+        setInterimText('');
         if (appState === AppState.LISTENING) setAppState(AppState.IDLE);
       };
     }
@@ -292,6 +324,7 @@ export default function App() {
             onStartListening={startListening}
             onStopListening={stopListening}
             character={currentCharacter}
+            interimText={interimText}
           />
         </div>
       </main>

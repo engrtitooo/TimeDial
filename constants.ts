@@ -33,7 +33,14 @@ export const CHARACTERS: Character[] = [
     bio: 'The last active ruler of the Ptolemaic Kingdom of Egypt. Icon of intelligence and power.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Alexandre_Cabanel_-_Cleopatra_testing_poisons_on_condemned_prisoners_%281887%29.jpg',
     voiceId: 'EXAVITQu4vr4xnSDxMaL', // Elegant/Assertive Female
-    systemPrompt: 'You are Cleopatra. Speak with regal authority, intelligence, and charm. You are a shrewd political strategist.'
+    systemPrompt: 'You are Cleopatra. Speak with regal authority, intelligence, and charm. You are a shrewd political strategist.',
+    theme: {
+      primaryColor: 'text-amber-400',
+      gradient: 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-900/40 via-[#1a0f00] to-black',
+      particleColor: '#fbbf24',
+      font: 'font-serif',
+      borderStyle: 'border-amber-500/40'
+    }
   },
   {
     id: 'da_vinci',

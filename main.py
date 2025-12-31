@@ -36,18 +36,59 @@ async def chat_endpoint(request: ChatRequest):
 
 @app.post("/speech")
 async def speech_endpoint(request: SpeechRequest):
-    # Verify API Key Availability
-    if not os.getenv("ELEVENLABS_API_KEY"):
-         print("ERROR: ELEVENLABS_API_KEY is missing inside endpoint check!", flush=True)
-         raise HTTPException(status_code=500, detail="Server Configuration Error: Missing Voice API Key")
+    import requests
+    import os
+    
+    # 1. Verify Configuration
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    if not api_key:
+         print("CRITICAL: ELEVENLABS_API_KEY missing from environment", flush=True)
+         raise HTTPException(status_code=500, detail="Server Error: Missing Voice API Key")
 
     try:
-        audio_content = await eleven_service.generate_speech(request)
-        return Response(content=audio_content, media_type="audio/mpeg")
+        # 2. Extract Data
+        text = request.text.replace("*", "").strip()
+        # Fallback to a stable voice (Antoni) if ID is missing or invalid
+        voice_id = request.voice_id or "ErXwobaYiN019PkySvjV" 
+
+        # 3. Direct HTTP Request (Bypassing all SDKs)
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        
+        headers = {
+            "xi-api-key": api_key,
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "text": text,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+                "stability": 0.5, 
+                "similarity_boost": 0.75
+            }
+        }
+
+        print(f"DEBUG: Generating Speech for VoiceID: {voice_id}", flush=True)
+        
+        # 4. Synchronous but reliable request
+        response = requests.post(url, json=payload, headers=headers)
+
+        # 5. Handle Errors Explicitly
+        if response.status_code != 200:
+            error_msg = f"ElevenLabs API Error ({response.status_code}): {response.text}"
+            print(f"CRITICAL: {error_msg}", flush=True)
+            raise HTTPException(status_code=500, detail=error_msg)
+
+        # 6. Return Audio
+        print(f"DEBUG: Audio Generated Success ({len(response.content)} bytes)", flush=True)
+        return Response(content=response.content, media_type="audio/mpeg")
+
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        print(f"CRITICAL ELEVENLABS ERROR: {str(e)}", flush=True)
-        # Return the actual error to the frontend
-        raise HTTPException(status_code=500, detail=f"Speech Generation Failed: {str(e)}")
+        import traceback
+        print(f"SERVER CRASH: {traceback.format_exc()}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Internal Crash: {str(e)}")
 
 @app.get("/health")
 def health_check():

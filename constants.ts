@@ -6,7 +6,8 @@ export const GEMINI_MODEL_CHAT = 'gemini-3-flash-preview';
 export const GEMINI_MODEL_IMAGE = 'gemini-2.5-flash-image';
 
 export const FALLBACK_AVATARS: Record<string, string> = {
-  da_vinci: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Francesco_Melzi_-_Portrait_of_Leonardo_-_WGA14795.jpg/509px-Francesco_Melzi_-_Portrait_of_Leonardo_-_WGA14795.jpg'
+  da_vinci: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Francesco_Melzi_-_Portrait_of_Leonardo_-_WGA14795.jpg/509px-Francesco_Melzi_-_Portrait_of_Leonardo_-_WGA14795.jpg',
+  cleopatra: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Kleopatra-VII.-Altes-Museum-Berlin1.jpg/440px-Kleopatra-VII.-Altes-Museum-Berlin1.jpg'
 };
 // Character Definitions
 export const CHARACTERS: Character[] = [
@@ -31,7 +32,7 @@ export const CHARACTERS: Character[] = [
     name: 'Cleopatra VII',
     role: 'Pharaoh of Egypt',
     bio: 'An elegant, confident, and assertive female voice. It conveys the authority of a powerful ruler with a sophisticated and commanding tone.',
-    avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Alexandre_Cabanel_-_Cleopatra_testing_poisons_on_condemned_prisoners_%281887%29.jpg',
+    avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Kleopatra-VII.-Altes-Museum-Berlin1.jpg/440px-Kleopatra-VII.-Altes-Museum-Berlin1.jpg',
     voiceId: '4RZ84U1b4WCqpu57LvIq', // Bella (Manual ID)
     systemPrompt: 'You are Cleopatra. Speak with regal authority, intelligence, and charm. You are a shrewd political strategist.',
     theme: {

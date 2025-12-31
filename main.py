@@ -1,22 +1,22 @@
 """
-MAIN.PY - Voice Only Mode
-=========================
-This file has voice working (ElevenLabs) but chat disabled (Gemini crashed).
+MAIN.PY - Full Mode with Safe Gemini Import
+============================================
+Voice works + Chat works (with safe Gemini import)
 """
 import os
 import json
 import urllib.request
 import urllib.error
 import traceback
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
-print("BOOT: Starting Voice-Only server...", flush=True)
+print("BOOT: Starting TimeDial server...", flush=True)
 
-app = FastAPI(title="TimeDial Backend - Voice Only Mode")
+app = FastAPI(title="TimeDial Backend")
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,17 +26,81 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Safe Gemini Import ---
+gemini_client = None
+try:
+    from google import genai
+    api_key = os.getenv("GOOGLE_API_KEY", "").strip()
+    if api_key:
+        gemini_client = genai.Client(api_key=api_key)
+        print("BOOT: Gemini client initialized successfully.", flush=True)
+    else:
+        print("BOOT WARNING: GOOGLE_API_KEY missing, chat disabled.", flush=True)
+except ImportError as e:
+    print(f"BOOT WARNING: Could not import google.genai: {e}", flush=True)
+except Exception as e:
+    print(f"BOOT WARNING: Gemini init failed: {e}", flush=True)
+
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "mode": "voice_only"}
+    return {"status": "ok", "gemini": gemini_client is not None}
 
 @app.post("/chat")
-async def chat_endpoint():
-    # Chat disabled - Gemini library crashing container
-    return JSONResponse(
-        status_code=503,
-        content={"text": "The temporal link is undergoing maintenance. Voice still works!", "sources": []}
-    )
+async def chat_endpoint(request: Request):
+    try:
+        data = await request.json()
+        prompt = data.get("prompt", "")
+        system_instruction = data.get("system_instruction", "You are a helpful assistant.")
+        history = data.get("history", [])
+        
+        if not gemini_client:
+            return JSONResponse(content={
+                "text": "The temporal link is being repaired. Please try again later.",
+                "sources": []
+            })
+        
+        # Build contents
+        contents = []
+        for msg in history:
+            contents.append({
+                "role": msg.get("role", "user"),
+                "parts": [{"text": p.get("text", "")} for p in msg.get("parts", [])]
+            })
+        contents.append({"role": "user", "parts": [{"text": prompt}]})
+        
+        immersive_wrapper = f"""
+        Role: {system_instruction}
+        Constraint: 2 sentences max. No markdown. Never break character.
+        """
+        
+        response = gemini_client.models.generate_content(
+            model="gemini-2.0-flash-exp",
+            contents=contents,
+            config={
+                "system_instruction": immersive_wrapper,
+                "temperature": 0.7,
+                "tools": [{"google_search": {}}]
+            }
+        )
+        
+        text = response.text or "I am momentarily speechless..."
+        
+        sources = []
+        if response.candidates and response.candidates[0].grounding_metadata:
+            chunks = response.candidates[0].grounding_metadata.grounding_chunks or []
+            for chunk in chunks:
+                if chunk.web and chunk.web.uri and chunk.web.title:
+                    sources.append({"title": chunk.web.title, "url": chunk.web.uri})
+        
+        return JSONResponse(content={"text": text, "sources": sources})
+        
+    except Exception as e:
+        print(f"CHAT ERROR: {e}", flush=True)
+        traceback.print_exc()
+        return JSONResponse(content={
+            "text": "The temporal link is failing. I cannot hear you clearly.",
+            "sources": []
+        })
 
 @app.post("/speech")
 async def generate_speech(request: Request):

@@ -99,8 +99,8 @@ export default function App() {
       // Keys are now handled on backend, passed empty string or ignored
       const audioBuffer = await generateElevenLabsSpeech(
         text,
-        char.voiceId,
-        "",
+        char.voiceId, // Dynamic Voice ID
+        '',           // Backend now handles API Key
         audioContextRef.current
       );
       if (audioBuffer) {

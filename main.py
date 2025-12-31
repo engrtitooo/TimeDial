@@ -44,7 +44,8 @@ async def generate_speech(request: Request):
     try:
         data = await request.json()
         text = data.get("text", "Hello")
-        voice_id = "ErXwobaYiN019PkySvjV" # Guaranteed ID
+        # Extract Dynamic Voice ID, fallback to Antoni (ErX...) if missing
+        voice_id = data.get("voiceId", "ErXwobaYiN019PkySvjV") 
         
         api_key = os.getenv("ELEVENLABS_API_KEY")
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"

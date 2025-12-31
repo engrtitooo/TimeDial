@@ -31,7 +31,7 @@ export const Controls: React.FC<ControlsProps> = ({
   return (
     <div className="w-full max-w-2xl mx-auto p-4 z-20">
       <div className={`glass-panel p-2 rounded-2xl flex items-center gap-3 ${character.theme.borderStyle} bg-black/40`}>
-        
+
         {/* Text Input */}
         <form onSubmit={handleSubmit} className="flex-1">
           <input
@@ -40,7 +40,7 @@ export const Controls: React.FC<ControlsProps> = ({
             onChange={(e) => setInputText(e.target.value)}
             disabled={isBusy || isListening}
             placeholder={isListening ? "Listening..." : isBusy ? "Character is responding..." : `Message ${character.name}...`}
-            className={`w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-sm text-white placeholder-slate-400 font-light`}
+            className={`w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-base text-white placeholder-slate-400 font-light`}
           />
         </form>
 
@@ -51,7 +51,7 @@ export const Controls: React.FC<ControlsProps> = ({
             <button
               onClick={handleSubmit}
               disabled={isBusy}
-              className={`p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white`}
+              className={`p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white min-w-[48px] min-h-[48px] flex items-center justify-center`}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
@@ -68,26 +68,26 @@ export const Controls: React.FC<ControlsProps> = ({
             disabled={isBusy}
             className={`
               relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
-              ${isListening 
-                ? 'bg-red-500/20 text-red-400 ring-2 ring-red-500 ring-offset-2 ring-offset-black' 
-                : isBusy 
-                  ? 'bg-slate-700/50 text-slate-500 cursor-wait' 
+              ${isListening
+                ? 'bg-red-500/20 text-red-400 ring-2 ring-red-500 ring-offset-2 ring-offset-black'
+                : isBusy
+                  ? 'bg-slate-700/50 text-slate-500 cursor-wait'
                   : `bg-white/10 hover:bg-white/20 ${character.theme.primaryColor} ring-1 ring-white/10`
               }
             `}
           >
-             {isListening && <div className="absolute inset-0 rounded-full animate-ping bg-red-500/20"></div>}
+            {isListening && <div className="absolute inset-0 rounded-full animate-ping bg-red-500/20"></div>}
             <svg className="w-6 h-6 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
           </button>
         </div>
       </div>
-      
+
       <div className="text-center mt-2">
-         <span className={`text-[10px] uppercase tracking-[0.2em] opacity-50 ${character.theme.primaryColor}`}>
-           {isListening ? 'Listening...' : isBusy ? 'Processing Time Stream...' : 'Type or Hold Mic'}
-         </span>
+        <span className={`text-[10px] uppercase tracking-[0.2em] opacity-50 ${character.theme.primaryColor}`}>
+          {isListening ? 'Listening...' : isBusy ? 'Processing Time Stream...' : 'Type or Hold Mic'}
+        </span>
       </div>
     </div>
   );

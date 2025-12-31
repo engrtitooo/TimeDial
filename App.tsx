@@ -28,14 +28,40 @@ export default function App() {
   // Fallback to static URLs only since we removed client-side generation
   const activeAvatarUrl = currentCharacter ? (currentCharacter.avatarUrl || FALLBACK_AVATARS[currentCharacter.id]) : '';
 
-  const initAudio = () => {
+  const initAudio = useCallback(() => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     if (audioContextRef.current?.state === 'suspended') {
       audioContextRef.current.resume();
     }
-  };
+  }, []);
+
+  // Global unlock for iOS audio
+  useEffect(() => {
+    const unlockAudio = () => {
+      initAudio();
+      // Play silent buffer to warm up
+      if (audioContextRef.current) {
+        const buffer = audioContextRef.current.createBuffer(1, 1, 22050);
+        const source = audioContextRef.current.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContextRef.current.destination);
+        source.start(0);
+        console.log("Audio Context Unlocked");
+      }
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+
+    window.addEventListener('click', unlockAudio);
+    window.addEventListener('touchstart', unlockAudio);
+
+    return () => {
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+  }, [initAudio]);
 
   const playAudio = (buffer: AudioBuffer) => {
     if (!audioContextRef.current) return;
@@ -195,7 +221,7 @@ export default function App() {
           {CHARACTERS.map(char => {
             const displayUrl = char.avatarUrl || FALLBACK_AVATARS[char.id];
             return (
-              <button key={char.id} onClick={() => enterRoom(char.id)} className="group relative h-[450px] w-full md:w-64 rounded-3xl overflow-hidden border border-white/5 transition-all duration-700 hover:-translate-y-4 hover:shadow-[0_20px_60px_-15px_rgba(251,191,36,0.3)] bg-slate-900/40">
+              <button key={char.id} onClick={() => enterRoom(char.id)} className="group relative h-[380px] md:h-[450px] w-full md:w-64 rounded-3xl overflow-hidden border border-white/5 transition-all duration-700 hover:-translate-y-4 hover:shadow-[0_20px_60px_-15px_rgba(251,191,36,0.3)] bg-slate-900/40">
                 <div className={`absolute inset-0 bg-gradient-to-b ${char.theme.gradient} opacity-90 group-hover:opacity-100 transition-opacity`}></div>
                 {displayUrl && <img src={displayUrl} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-all scale-100 group-hover:scale-105 duration-1000 mix-blend-overlay" alt={char.name} />}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050510] via-transparent to-transparent opacity-80"></div>

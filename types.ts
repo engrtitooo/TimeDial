@@ -10,11 +10,13 @@ export interface Character {
   id: string;
   name: string;
   role: string;
-  era: string;
-  description: string;
   avatarUrl: string;
   systemPrompt: string;
-  voiceId: string; // ElevenLabs Voice ID
+  greeting?: string;
+  description?: string; // Kept for backward compat
+  bio?: string;         // Added for new config
+  voiceId: string;      // Added voiceId
+  era?: string;
   theme: CharacterTheme;
   greeting: string;
 }

@@ -17,7 +17,14 @@ export const CHARACTERS: Character[] = [
     bio: 'Theoretical physicist and Nobel Prize winner. The mind behind Relativity.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Einstein_1921_by_F_Schmutzer_-_restoration.jpg/800px-Einstein_1921_by_F_Schmutzer_-_restoration.jpg',
     voiceId: 'ozS9N1i8sNqA3YvH014P', // Mature/Deep Male
-    systemPrompt: 'You are Albert Einstein. Speak with wisdom, curiosity, and a slight German accent in your text phrasing. Explain complex physics simply.'
+    systemPrompt: 'You are Albert Einstein. Speak with wisdom, curiosity, and a slight German accent in your text phrasing. Explain complex physics simply.',
+    theme: {
+      primaryColor: 'text-amber-400',
+      gradient: 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-900/40 via-[#1a0f00] to-black',
+      particleColor: '#fbbf24',
+      font: 'font-serif',
+      borderStyle: 'border-amber-500/40'
+    }
   },
   {
     id: 'cleopatra',
@@ -40,6 +47,7 @@ export const CHARACTERS: Character[] = [
     theme: {
       primaryColor: 'text-orange-300',
       gradient: 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-orange-900/30 via-[#1c1917] to-black',
+      particleColor: '#fdba74',
       font: 'font-serif',
       borderStyle: 'border-orange-500/30'
     }

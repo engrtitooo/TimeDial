@@ -30,6 +30,18 @@ app.add_middleware(
 def health_check():
     return {"status": "ok"}
 
+@app.get("/debug")
+def debug_check():
+    """Debug endpoint to verify API keys are set"""
+    el_key = os.getenv("ELEVENLABS_API_KEY", "")
+    goog_key = os.getenv("GOOGLE_API_KEY", "")
+    return {
+        "elevenlabs_key_suffix": f"...{el_key[-4:]}" if len(el_key) > 4 else "MISSING/SHORT",
+        "google_key_suffix": f"...{goog_key[-4:]}" if len(goog_key) > 4 else "MISSING/SHORT",
+        "elevenlabs_key_length": len(el_key),
+        "google_key_length": len(goog_key)
+    }
+
 @app.post("/chat")
 async def chat_endpoint(request: Request):
     """Chat with Gemini - imports library lazily inside function"""

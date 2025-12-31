@@ -43,8 +43,8 @@ import urllib.error
 async def generate_speech(request: Request):
     try:
         data = await request.json()
-        text = data.get("text", "")
-        voice_id = data.get("voiceId", "ErXwobaYiN019PkySvjV")
+        text = data.get("text", "Hello")
+        voice_id = "ErXwobaYiN019PkySvjV" # Guaranteed ID
         
         api_key = os.getenv("ELEVENLABS_API_KEY")
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
@@ -54,34 +54,27 @@ async def generate_speech(request: Request):
             "Content-Type": "application/json",
             "Accept": "audio/mpeg"
         }
-        payload = json.dumps({
-            "text": text,
-            "model_id": "eleven_multilingual_v2",
-            "voice_settings": {"stability": 0.5, "similarity_boost": 0.5}
-        }).encode("utf-8")
+        payload = json.dumps({"text": text, "model_id": "eleven_multilingual_v2"}).encode("utf-8")
 
+        # Calling ElevenLabs
         req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
-        
-        print(f"DEBUG: Successfully sent request to ElevenLabs for text: {text[:20]}...", flush=True)
-
         with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                audio_data = response.read()
-                print(f"DEBUG: Successfully read {len(audio_data)} bytes from ElevenLabs", flush=True)
-                # Return raw binary content directly
-                return Response(
-                    content=audio_data, 
-                    media_type="audio/mpeg",
-                    headers={"Content-Disposition": "attachment; filename=speech.mp3"}
-                )
-            else:
-                return JSONResponse(status_code=response.status, content={"error": "API_REJECTED"})
+            audio_data = response.read()
+            
+            # THE FIX: Direct binary response
+            return Response(
+                content=audio_data, 
+                media_type="audio/mpeg",
+                headers={
+                    "Content-Type": "audio/mpeg",
+                    "Content-Length": str(len(audio_data))
+                }
+            )
 
     except Exception as e:
         import traceback
-        error_msg = traceback.format_exc()
-        print(f"CRITICAL SERVER ERROR:\n{error_msg}", flush=True)
-        return JSONResponse(status_code=500, content={"error": str(e), "trace": error_msg})
+        print(f"DELIVERY ERROR: {traceback.format_exc()}", flush=True)
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.get("/health")
 def health_check():

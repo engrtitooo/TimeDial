@@ -10,6 +10,7 @@ RUN npm run build
 # --- Stage 2: Serve with Python ---
 FROM python:3.11-slim
 WORKDIR /app
+ENV PYTHONUNBUFFERED=1
 
 # Install backend dependencies
 COPY requirements.txt .

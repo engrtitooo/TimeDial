@@ -7,13 +7,21 @@ from models import ChatRequest, ChatResponse, SpeechRequest, GroundingSource
 # --- Gemini Service ---
 class GeminiService:
     def __init__(self):
-        self.client = genai.Client(api_key=GOOGLE_API_KEY)
-        self.model_name = "gemini-2.0-flash-exp" # Using a fast model as per original code implications
-        # Note: Original code imported GEMINI_MODEL_CHAT from constants. 
-        # Ideally we'd mirror that or stick to a known working model.
-        # Let's assume a standard capable model.
+        if GOOGLE_API_KEY:
+            try:
+                self.client = genai.Client(api_key=GOOGLE_API_KEY)
+                self.model_name = "gemini-2.0-flash-exp"
+            except Exception as e:
+                print(f"Gemini Client Init Warning: {e}")
+                self.client = None
+        else:
+            print("Gemini Service Warning: GOOGLE_API_KEY not set. Chat will fail.")
+            self.client = None
 
     async def generate_response(self, request: ChatRequest) -> ChatResponse:
+        if not self.client:
+             return ChatResponse(text="I cannot speak. My mind key (GOOGLE_API_KEY) is missing.", sources=[])
+        
         immersive_wrapper = f"""
         Role: {request.system_instruction}
         Constraint: 2 sentences max. No markdown. Never break character.

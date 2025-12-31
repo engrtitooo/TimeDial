@@ -66,80 +66,38 @@ class GeminiService:
             )
 
 # --- ElevenLabs Service ---
+# --- ElevenLabs Service ---
+from elevenlabs.client import ElevenLabs
+import os
+
 class ElevenLabsService:
     def __init__(self):
-        self.api_key = ELEVENLABS_API_KEY
-        self.base_url = "https://api.elevenlabs.io/v1"
-        self.cached_voices = []
-
-    async def _fetch_voices(self):
-        async with httpx.AsyncClient() as client:
-            try:
-                resp = await client.get(
-                    f"{self.base_url}/voices",
-                    headers={"xi-api-key": self.api_key}
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    self.cached_voices = data.get("voices", [])
-            except Exception as e:
-                print(f"Failed to fetch voices: {e}")
+        # Initialize the V3 Client
+        api_key = ELEVENLABS_API_KEY or os.getenv("ELEVENLABS_API_KEY")
+        self.client = ElevenLabs(api_key=api_key)
 
     async def generate_speech(self, request: SpeechRequest) -> bytes:
         clean_text = request.text.replace("*", "").strip()
-        
-        # Simple cleanup as per original TS
-        
         voice_id = request.voice_id
-        
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            # First attempt
-            # DEBUG: Check if API Key exists
-            import os
-            print(f"DEBUG: ElevenLabs Key loaded? {bool(self.api_key)}", flush=True)
 
-            url = f"{self.base_url}/text-to-speech/{voice_id}"
-            payload = {
-                "text": clean_text,
-                "model_id": "eleven_multilingual_v2",
-                "voice_settings": {
+        try:
+             # Use the V3 Client Syntax
+            audio_generator = self.client.text_to_speech.convert(
+                voice_id=voice_id,
+                text=clean_text,
+                model_id="eleven_multilingual_v2",
+                voice_settings={
                     "stability": 0.5,
-                    "similarity_boost": 0.75
+                    "similarity_boost": 0.75,
                 }
-            }
-            headers = {
-                "Content-Type": "application/json",
-                "xi-api-key": self.api_key
-            }
-
-            resp = await client.post(url, json=payload, headers=headers)
+            )
             
-            print(f"DEBUG: ElevenLabs API Status: {resp.status_code}", flush=True)
+            # Consume the generator to get full audio bytes
+            audio_data = b"".join(audio_generator)
+            
+            print(f"DEBUG: Generated Audio Size: {len(audio_data)} bytes", flush=True)
+            return audio_data
 
-            if resp.status_code == 401:
-                print("DEBUG: Unauthorized - Invalid API Key", flush=True)
-            elif resp.status_code == 429:
-                print("DEBUG: Quota Exceeded", flush=True)
-
-            if resp.status_code == 404:
-                print(f"Voice {voice_id} not found. Attempting fallback.")
-                if not self.cached_voices:
-                    await self._fetch_voices()
-                
-                if self.cached_voices:
-                     # Fallback logic: find Rachel or take first
-                     fallback = next((v for v in self.cached_voices if v['name'].lower() == 'rachel'), self.cached_voices[0])
-                     voice_id = fallback['voice_id']
-                     print(f"Redirecting to fallback voice: {fallback['name']}")
-                     url = f"{self.base_url}/text-to-speech/{voice_id}"
-                     resp = await client.post(url, json=payload, headers=headers)
-                else:
-                    raise Exception("No voices available.")
-
-            if resp.status_code != 200:
-                 error_msg = resp.text
-                 print(f"ElevenLabs Error: {resp.status_code} - {error_msg}")
-                 raise Exception(f"ElevenLabs API Error: {resp.status_code}")
-
-            print(f"DEBUG: Audio chunk size: {len(resp.content)} bytes", flush=True)
-            return resp.content
+        except Exception as e:
+            print(f"CRITICAL ELEVENLABS V3 ERROR: {str(e)}", flush=True)
+            raise e

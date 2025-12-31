@@ -5,7 +5,7 @@ interface ChatResponse {
   sources: GroundingSource[];
 }
 
-// Adjust this URL if your backend is hosted elsewhere or on a different port
+// Relative path for Cloud Run (same domain)
 const BACKEND_URL = '';
 
 export const generateCharacterResponse = async (
@@ -28,16 +28,19 @@ export const generateCharacterResponse = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Backend Error: ${response.status}`);
+      // DEBUG: Capture the exact error text from the server (e.g. "Quota exceeded", "Invalid API Key")
+      const errorText = await response.text();
+      throw new Error(`Server Error (${response.status}): ${errorText}`);
     }
 
     const data: ChatResponse = await response.json();
     return data;
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Chat Generation Error:", error);
+    // Return the actual error message to the chat bubble
     return {
-      text: "I cannot reach the history servers right now.",
+      text: `System Error: ${error.message || "Unknown Connection Error"}. Please check the backend logs.`,
       sources: []
     };
   }

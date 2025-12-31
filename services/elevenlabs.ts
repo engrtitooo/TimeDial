@@ -20,15 +20,17 @@ export const generateElevenLabsSpeech = async (
     });
 
     if (!response.ok) {
-      // Try to parse JSON error first
+      // Clone the response so we can try both json and text
+      const responseClone = response.clone();
       try {
         const errorData = await response.json();
-        const detail = errorData.detail || errorData.error || errorData.trace || JSON.stringify(errorData);
+        const detail = errorData.detail || errorData.error || errorData.raw || JSON.stringify(errorData);
         console.error("Backend Error Detail:", detail);
-        throw new Error(`Speech Error (${response.status}): ${detail.substring(0, 200)}...`); // Truncate for UI
+        throw new Error(`Speech Error: ${detail.substring(0, 200)}`);
       } catch (jsonError) {
-        // Fallback to text
-        const errorText = await response.text();
+        // Fallback to text using the clone
+        const errorText = await responseClone.text();
+        console.error("Backend Error Text:", errorText);
         throw new Error(`Speech Error (${response.status}): ${errorText.substring(0, 100)}`);
       }
     }

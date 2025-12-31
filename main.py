@@ -41,7 +41,15 @@ async def generate_speech(request: Request):
     try:
         data = await request.json()
         text = data.get("text", "")
-        voice_id = str(data.get("voiceId") or "ozS9N1i8sNqA3YvH014P").strip()
+        # DEBUGGING: Print exact received data
+        print(f"DEBUG: Received JSON: {data}", flush=True)
+        
+        request_voice_id = data.get("voiceId")
+        print(f"DEBUG: Frontend sent voiceId: '{request_voice_id}'", flush=True)
+
+        voice_id = str(request_voice_id or "ozS9N1i8sNqA3YvH014P").strip()
+        print(f"DEBUG: Final voiceId used for API call: '{voice_id}'", flush=True)
+
         api_key = os.getenv("ELEVENLABS_API_KEY", "").strip()
         
         # Log key mask for debugging (visible in Cloud Run Logs)

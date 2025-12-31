@@ -36,12 +36,18 @@ async def chat_endpoint(request: ChatRequest):
 
 @app.post("/speech")
 async def speech_endpoint(request: SpeechRequest):
+    # Verify API Key Availability
+    if not os.getenv("ELEVENLABS_API_KEY"):
+         print("ERROR: ELEVENLABS_API_KEY is missing inside endpoint check!", flush=True)
+         raise HTTPException(status_code=500, detail="Server Configuration Error: Missing Voice API Key")
+
     try:
         audio_content = await eleven_service.generate_speech(request)
         return Response(content=audio_content, media_type="audio/mpeg")
     except Exception as e:
-        print(f"Speech Endpoint Error: {e}")
-        raise HTTPException(status_code=500, detail=f"Speech Error: {str(e)}")
+        print(f"CRITICAL ELEVENLABS ERROR: {str(e)}", flush=True)
+        # Return the actual error to the frontend
+        raise HTTPException(status_code=500, detail=f"Speech Generation Failed: {str(e)}")
 
 @app.get("/health")
 def health_check():

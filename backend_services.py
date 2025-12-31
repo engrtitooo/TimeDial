@@ -67,37 +67,48 @@ class GeminiService:
 
 # --- ElevenLabs Service ---
 # --- ElevenLabs Service ---
-from elevenlabs.client import ElevenLabs
+import requests
 import os
 
 class ElevenLabsService:
     def __init__(self):
-        # Initialize the V3 Client
-        api_key = ELEVENLABS_API_KEY or os.getenv("ELEVENLABS_API_KEY")
-        self.client = ElevenLabs(api_key=api_key)
+        self.api_key = ELEVENLABS_API_KEY or os.getenv("ELEVENLABS_API_KEY")
 
     async def generate_speech(self, request: SpeechRequest) -> bytes:
         clean_text = request.text.replace("*", "").strip()
         voice_id = request.voice_id
+        
+        # Use direct HTTP request to avoid SDK version issues
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        
+        headers = {
+            "xi-api-key": self.api_key,
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "text": clean_text,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+                "stability": 0.5, 
+                "similarity_boost": 0.75
+            }
+        }
 
         try:
-             # Use the V3 Client Syntax
-            audio_generator = self.client.text_to_speech.convert(
-                voice_id=voice_id,
-                text=clean_text,
-                model_id="eleven_multilingual_v2",
-                voice_settings={
-                    "stability": 0.5,
-                    "similarity_boost": 0.75,
-                }
-            )
+            print(f"DEBUG: Calling ElevenLabs API (Direct Request) for Voice {voice_id}", flush=True)
+            # Use requests (sync) but it's reliable. 
+            # In a full prod app we should wrap in run_in_executor, but for hackathon this works.
+            response = requests.post(url, json=payload, headers=headers)
             
-            # Consume the generator to get full audio bytes
-            audio_data = b"".join(audio_generator)
-            
+            if response.status_code != 200:
+                print(f"CRITICAL ELEVENLABS ERROR {response.status_code}: {response.text}", flush=True)
+                raise Exception(f"Voice API Error ({response.status_code}): {response.text}")
+
+            audio_data = response.content
             print(f"DEBUG: Generated Audio Size: {len(audio_data)} bytes", flush=True)
             return audio_data
 
         except Exception as e:
-            print(f"CRITICAL ELEVENLABS V3 ERROR: {str(e)}", flush=True)
+            print(f"CRITICAL ELEVENLABS EXCEPTION: {str(e)}", flush=True)
             raise e

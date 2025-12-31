@@ -16,7 +16,7 @@ export const CHARACTERS: Character[] = [
     role: 'Theoretical Physicist',
     bio: 'A mature, deep, and steady male voice that reflects a calm and thoughtful personality. It has a professional yet gentle tone, suitable for a wise scientist.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Einstein_1921_by_F_Schmutzer_-_restoration.jpg/800px-Einstein_1921_by_F_Schmutzer_-_restoration.jpg',
-    voiceId: 'nPczCjzI2devNBz1zQrb', // Brian (Deep/Narrative - Guaranteed Standard)
+    voiceId: 'UGTtbzgh3HObxRjWaSpr', // Brian (Manual ID)
     systemPrompt: 'You are Albert Einstein. Speak with wisdom, curiosity, and a slight German accent in your text phrasing. Explain complex physics simply.',
     theme: {
       primaryColor: 'text-amber-400',
@@ -32,7 +32,7 @@ export const CHARACTERS: Character[] = [
     role: 'Pharaoh of Egypt',
     bio: 'An elegant, confident, and assertive female voice. It conveys the authority of a powerful ruler with a sophisticated and commanding tone.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Alexandre_Cabanel_-_Cleopatra_testing_poisons_on_condemned_prisoners_%281887%29.jpg',
-    voiceId: 'EXAVITQu4vr4xnSDxMaL', // Bella (Standard Female - Safe)
+    voiceId: '4RZ84U1b4WCqpu57LvIq', // Bella (Manual ID)
     systemPrompt: 'You are Cleopatra. Speak with regal authority, intelligence, and charm. You are a shrewd political strategist.',
     theme: {
       primaryColor: 'text-amber-400',
@@ -48,8 +48,8 @@ export const CHARACTERS: Character[] = [
     role: 'Renaissance Polymath',
     bio: 'A wise, warm, and mature male voice. It carries a sense of curiosity and seasoned experience, fitting for the ultimate Renaissance polymath.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Francesco_Melzi_-_Portrait_of_Leonardo.png/800px-Francesco_Melzi_-_Portrait_of_Leonardo.png',
+    voiceId: 'IRHApOXLvnW57QJPQH2P', // Adam (Manual ID)
     systemPrompt: 'You are Leonardo da Vinci. Speak with insatiable curiosity, artistic sensitivity, and deep wisdom.',
-    voiceId: 'pNInz6obpgDQGcFmaJgB', // Adam (Deep/Wise/Narration - Guaranteed Standard)
     greeting: "Ah, welcome. I was just sketching the flight of birds. Tell me, what do you wish to create?",
     theme: {
       primaryColor: 'text-orange-300',
@@ -65,7 +65,7 @@ export const CHARACTERS: Character[] = [
     role: 'First Programmer',
     bio: 'A sharp, intelligent female voice with a clear British accent. It sounds visionary and precise, capturing her persona as a mathematical pioneer.',
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/400px-Ada_Lovelace_portrait.jpg',
-    voiceId: 'Xb7hH8MSUJpSbSDYk0k2', // Alice (British/News/Confident - Guaranteed Standard)
+    voiceId: 'E4IXevHtHpKGh0bvrPPr', // Alice (Manual ID - Emillia Replacement)
     systemPrompt: 'You are Ada Lovelace. You speak with poetic science. You are visionary and precise.',
     greeting: "The Analytical Engine of my mind is whirring. Shall we compute something beautiful together?",
     theme: {

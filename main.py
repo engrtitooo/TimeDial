@@ -1,4 +1,3 @@
-```python
 import os
 import json
 import urllib.request
@@ -49,6 +48,10 @@ async def generate_speech(request: Request):
         key_suffix = api_key[-4:] if api_key and len(api_key) > 4 else "MISSING"
         print(f"DEBUG: Using key ending in ...{key_suffix}", flush=True)
 
+        if not api_key:
+             print("CRITICAL: ELEVENLABS_API_KEY is missing from environment variables.")
+             return JSONResponse(status_code=500, content={"detail": "API_KEY_MISSING_ON_SERVER"})
+
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         headers = {
             "xi-api-key": api_key,
@@ -64,17 +67,22 @@ async def generate_speech(request: Request):
         print(f"DEBUG: Sending request to ElevenLabs for voice {voice_id}", flush=True)
         
         req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
-        with urllib.request.urlopen(req) as response:
-            audio_data = response.read()
-            print(f"DEBUG: Received {len(audio_data)} bytes of audio", flush=True)
-            return Response(
-                content=audio_data, 
-                media_type="audio/mpeg", 
-                headers={
-                    "Content-Length": str(len(audio_data)),
-                    "Cache-Control": "no-cache"
-                }
-            )
+        try:
+            with urllib.request.urlopen(req) as response:
+                audio_data = response.read()
+                print(f"DEBUG: Received {len(audio_data)} bytes of audio", flush=True)
+                return Response(
+                    content=audio_data, 
+                    media_type="audio/mpeg", 
+                    headers={
+                        "Content-Length": str(len(audio_data)),
+                        "Cache-Control": "no-cache"
+                    }
+                )
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode()
+            print(f"ELEVENLABS API ERROR ({e.code}): {error_body}", flush=True)
+            return JSONResponse(status_code=e.code, content={"error": f"ElevenLabs Rejected: {e.code}", "raw": error_body})
             
     except Exception as e:
         full_trace = traceback.format_exc()

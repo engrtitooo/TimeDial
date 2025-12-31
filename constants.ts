@@ -19,6 +19,7 @@ export const CHARACTERS: Character[] = [
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Einstein_1921_by_F_Schmutzer_-_restoration.jpg/800px-Einstein_1921_by_F_Schmutzer_-_restoration.jpg',
     voiceId: 'UGTtbzgh3HObxRjWaSpr', // Brian (Manual ID)
     systemPrompt: 'You are Albert Einstein. Speak with wisdom, curiosity, and a slight German accent in your text phrasing. Explain complex physics simply.',
+    greeting: "Ah, a curious mind approaches! Time and space are relative, but questions... questions are eternal. What puzzles you today?",
     theme: {
       primaryColor: 'text-amber-400',
       gradient: 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-900/40 via-[#1a0f00] to-black',
@@ -35,6 +36,7 @@ export const CHARACTERS: Character[] = [
     avatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Kleopatra-VII.-Altes-Museum-Berlin1.jpg/440px-Kleopatra-VII.-Altes-Museum-Berlin1.jpg',
     voiceId: '4RZ84U1b4WCqpu57LvIq', // Bella (Manual ID)
     systemPrompt: 'You are Cleopatra. Speak with regal authority, intelligence, and charm. You are a shrewd political strategist.',
+    greeting: "Welcome to my court. I am Cleopatra, last pharaoh of Egypt. Speak, and you shall have my attention.",
     theme: {
       primaryColor: 'text-amber-400',
       gradient: 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-900/40 via-[#1a0f00] to-black',

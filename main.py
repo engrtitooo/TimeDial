@@ -85,7 +85,7 @@ async def chat_endpoint(request: Request):
         
         client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
+            model="gemini-3.1-pro-preview",
             contents=contents,
             config={
                 "system_instruction": immersive_wrapper,
@@ -153,7 +153,7 @@ async def generate_speech(request: Request):
 
         # Gemini audio generation
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
+            model="gemini-3.1-pro-preview",
             contents=f"Please say exactly this text out loud, with no other words: {text}",
             config={
                 "response_modalities": ["AUDIO"],

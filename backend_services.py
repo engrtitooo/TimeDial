@@ -25,7 +25,7 @@ class GeminiService:
         if GOOGLE_API_KEY:
             try:
                 self.client = genai.Client(api_key=GOOGLE_API_KEY)
-                self.model_name = "gemini-3.1-pro"
+                self.model_name = "gemini-2.0-flash-exp"
             except Exception as e:
                 print(f"Gemini Client Init Warning: {e}")
                 self.client = None
@@ -113,7 +113,7 @@ class GeminiVoiceService:
             voice_name = voice_map.get(voice_id, "Fenrir")
             
             response = client.models.generate_content(
-                model="gemini-3.1-pro",
+                model="gemini-2.0-flash-exp",
                 contents=f"Please say exactly this text out loud, with no other words: {clean_text}",
                 config={
                     "response_modalities": ["AUDIO"],

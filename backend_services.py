@@ -113,8 +113,8 @@ class GeminiVoiceService:
             voice_name = voice_map.get(voice_id, "Fenrir")
             
             response = client.models.generate_content(
-                model="gemini-3.1-pro-preview",
-                contents=f"Please say exactly this text out loud, with no other words: {clean_text}",
+                model="gemini-3.1-flash-tts-preview",
+                contents=clean_text,
                 config={
                     "response_modalities": ["AUDIO"],
                     "speech_config": {

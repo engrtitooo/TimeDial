@@ -153,8 +153,8 @@ async def generate_speech(request: Request):
 
         # Gemini audio generation
         response = client.models.generate_content(
-            model="gemini-3.1-pro-preview",
-            contents=f"Please say exactly this text out loud, with no other words: {text}",
+            model="gemini-3.1-flash-tts-preview",
+            contents=text,
             config={
                 "response_modalities": ["AUDIO"],
                 "speech_config": {

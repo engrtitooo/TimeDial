@@ -104,9 +104,13 @@ class GeminiVoiceService:
             from google import genai
             client = genai.Client(api_key=self.api_key)
             
-            gemini_voices = ["Puck", "Charon", "Kore", "Fenrir", "Aoede"]
-            voice_index = sum(ord(c) for c in voice_id) % len(gemini_voices)
-            voice_name = gemini_voices[voice_index]
+            voice_map = {
+                "UGTtbzgh3HObxRjWaSpr": "Puck",     # Einstein
+                "4RZ84U1b4WCqpu57LvIq": "Aoede",    # Cleopatra
+                "IRHApOXLvnW57QJPQH2P": "Charon",   # Da Vinci
+                "E4IXevHtHpKGh0bvrPPr": "Kore"      # Lovelace
+            }
+            voice_name = voice_map.get(voice_id, "Fenrir")
             
             response = client.models.generate_content(
                 model="gemini-3.1-pro",
@@ -132,6 +136,10 @@ class GeminiVoiceService:
             
             if not audio_data:
                 raise Exception("No audio data returned by Gemini.")
+                
+            if isinstance(audio_data, str):
+                import base64
+                audio_data = base64.b64decode(audio_data)
                 
             return audio_data
             

@@ -140,9 +140,14 @@ async def generate_speech(request: Request):
             
         client = genai.Client(api_key=api_key)
         
-        gemini_voices = ["Puck", "Charon", "Kore", "Fenrir", "Aoede"]
-        voice_index = sum(ord(c) for c in voice_id) % len(gemini_voices)
-        voice_name = gemini_voices[voice_index]
+        # Ensure unique voices for each character
+        voice_map = {
+            "UGTtbzgh3HObxRjWaSpr": "Puck",     # Einstein
+            "4RZ84U1b4WCqpu57LvIq": "Aoede",    # Cleopatra
+            "IRHApOXLvnW57QJPQH2P": "Charon",   # Da Vinci
+            "E4IXevHtHpKGh0bvrPPr": "Kore"      # Lovelace
+        }
+        voice_name = voice_map.get(voice_id, "Fenrir")
         
         print(f"SPEECH: Mapped to Gemini Voice: {voice_name}", flush=True)
 
@@ -172,6 +177,10 @@ async def generate_speech(request: Request):
         if not audio_data:
             print("SPEECH: No audio returned by Gemini", flush=True)
             return JSONResponse(status_code=500, content={"error": "No audio returned by Gemini"})
+
+        if isinstance(audio_data, str):
+            import base64
+            audio_data = base64.b64decode(audio_data)
 
         print(f"SPEECH: Got {len(audio_data)} bytes", flush=True)
         return Response(

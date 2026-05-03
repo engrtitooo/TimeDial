@@ -85,7 +85,7 @@ async def chat_endpoint(request: Request):
         
         client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
+            model="gemini-3.1-pro",
             contents=contents,
             config={
                 "system_instruction": immersive_wrapper,
@@ -115,49 +115,70 @@ async def chat_endpoint(request: Request):
 
 @app.post("/speech")
 async def generate_speech(request: Request):
-    """Generate speech with ElevenLabs"""
+    """Generate speech with Gemini Voice"""
     try:
         data = await request.json()
         text = data.get("text", "")
         
         print(f"SPEECH: Request received - voiceId: {data.get('voiceId')}", flush=True)
         
-        voice_id = str(data.get("voiceId") or "ozS9N1i8sNqA3YvH014P").strip()
-        api_key = os.getenv("ELEVENLABS_API_KEY", "").strip()
+        voice_id = str(data.get("voiceId") or "default").strip()
+        api_key = os.getenv("GOOGLE_API_KEY", "").strip()
         
         key_suffix = api_key[-4:] if api_key and len(api_key) > 4 else "MISSING"
-        print(f"SPEECH: Using key ...{key_suffix}, voice {voice_id}", flush=True)
+        print(f"SPEECH: Using Google key ...{key_suffix}, original voice {voice_id}", flush=True)
 
         if not api_key:
-            print("SPEECH: ELEVENLABS_API_KEY is missing!", flush=True)
-            return JSONResponse(status_code=500, content={"detail": "ELEVENLABS_API_KEY_MISSING"})
+            print("SPEECH: GOOGLE_API_KEY is missing!", flush=True)
+            return JSONResponse(status_code=500, content={"detail": "GOOGLE_API_KEY_MISSING"})
 
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-        headers = {
-            "xi-api-key": api_key,
-            "Content-Type": "application/json",
-            "Accept": "audio/mpeg"
-        }
-        payload = json.dumps({
-            "text": text,
-            "model_id": "eleven_multilingual_v2",
-            "voice_settings": {"stability": 0.5, "similarity_boost": 0.5}
-        }).encode("utf-8")
-
-        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
         try:
-            with urllib.request.urlopen(req) as response:
-                audio_data = response.read()
-                print(f"SPEECH: Got {len(audio_data)} bytes", flush=True)
-                return Response(
-                    content=audio_data, 
-                    media_type="audio/mpeg", 
-                    headers={"Content-Length": str(len(audio_data)), "Cache-Control": "no-cache"}
-                )
-        except urllib.error.HTTPError as e:
-            error_body = e.read().decode()
-            print(f"SPEECH ERROR ({e.code}): {error_body}", flush=True)
-            return JSONResponse(status_code=e.code, content={"error": f"ElevenLabs: {e.code}", "raw": error_body})
+            from google import genai
+        except ImportError as e:
+            print(f"SPEECH: Failed to import google.genai: {e}", flush=True)
+            return JSONResponse(status_code=500, content={"detail": "Google GenAI library missing"})
+            
+        client = genai.Client(api_key=api_key)
+        
+        gemini_voices = ["Puck", "Charon", "Kore", "Fenrir", "Aoede"]
+        voice_index = sum(ord(c) for c in voice_id) % len(gemini_voices)
+        voice_name = gemini_voices[voice_index]
+        
+        print(f"SPEECH: Mapped to Gemini Voice: {voice_name}", flush=True)
+
+        # Gemini audio generation
+        response = client.models.generate_content(
+            model="gemini-3.1-pro",
+            contents=f"Please say exactly this text out loud, with no other words: {text}",
+            config={
+                "response_modalities": ["AUDIO"],
+                "speech_config": {
+                    "voice_config": {
+                        "prebuilt_voice_config": {
+                            "voice_name": voice_name
+                        }
+                    }
+                }
+            }
+        )
+        
+        audio_data = None
+        if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+            for part in response.candidates[0].content.parts:
+                if part.inline_data:
+                    audio_data = part.inline_data.data
+                    break
+        
+        if not audio_data:
+            print("SPEECH: No audio returned by Gemini", flush=True)
+            return JSONResponse(status_code=500, content={"error": "No audio returned by Gemini"})
+
+        print(f"SPEECH: Got {len(audio_data)} bytes", flush=True)
+        return Response(
+            content=audio_data, 
+            media_type="audio/wav", 
+            headers={"Content-Length": str(len(audio_data)), "Cache-Control": "no-cache"}
+        )
             
     except Exception as e:
         print(f"SPEECH CRASH: {e}", flush=True)

@@ -1,6 +1,6 @@
 const BACKEND_URL = '';
 
-export const generateElevenLabsSpeech = async (
+export const generateVoiceSpeech = async (
   text: string,
   voiceId: string,
   _apiKey: string, // Kept for signature compatibility but ignored

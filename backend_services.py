@@ -25,7 +25,7 @@ class GeminiService:
         if GOOGLE_API_KEY:
             try:
                 self.client = genai.Client(api_key=GOOGLE_API_KEY)
-                self.model_name = "gemini-2.0-flash-exp"
+                self.model_name = "gemini-3.1-pro"
             except Exception as e:
                 print(f"Gemini Client Init Warning: {e}")
                 self.client = None
@@ -88,50 +88,53 @@ class GeminiService:
                 sources=[]
             )
 
-# --- ElevenLabs Service ---
-# --- ElevenLabs Service ---
-import requests
-import os
-
-class ElevenLabsService:
+# --- Gemini Voice Service ---
+class GeminiVoiceService:
     def __init__(self):
-        self.api_key = ELEVENLABS_API_KEY or os.getenv("ELEVENLABS_API_KEY")
+        self.api_key = GOOGLE_API_KEY or os.getenv("GOOGLE_API_KEY")
 
     async def generate_speech(self, request: SpeechRequest) -> bytes:
         clean_text = request.text.replace("*", "").strip()
         voice_id = request.voice_id
         
-        # Use direct HTTP request to avoid SDK version issues
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-        
-        headers = {
-            "xi-api-key": self.api_key,
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "text": clean_text,
-            "model_id": "eleven_multilingual_v2",
-            "voice_settings": {
-                "stability": 0.5, 
-                "similarity_boost": 0.75
-            }
-        }
-
-        try:
-            print(f"DEBUG: Calling ElevenLabs API (Direct Request) for Voice {voice_id}", flush=True)
-            # Use requests (sync) but it's reliable. 
-            # In a full prod app we should wrap in run_in_executor, but for hackathon this works.
-            response = requests.post(url, json=payload, headers=headers)
+        if not self.api_key:
+            raise Exception("GOOGLE_API_KEY missing for speech generation")
             
-            if response.status_code != 200:
-                print(f"CRITICAL ELEVENLABS ERROR {response.status_code}: {response.text}", flush=True)
-                raise Exception(f"Voice API Error ({response.status_code}): {response.text}")
-
-            audio_data = response.content
-            print(f"DEBUG: Generated Audio Size: {len(audio_data)} bytes", flush=True)
+        try:
+            from google import genai
+            client = genai.Client(api_key=self.api_key)
+            
+            gemini_voices = ["Puck", "Charon", "Kore", "Fenrir", "Aoede"]
+            voice_index = sum(ord(c) for c in voice_id) % len(gemini_voices)
+            voice_name = gemini_voices[voice_index]
+            
+            response = client.models.generate_content(
+                model="gemini-3.1-pro",
+                contents=f"Please say exactly this text out loud, with no other words: {clean_text}",
+                config={
+                    "response_modalities": ["AUDIO"],
+                    "speech_config": {
+                        "voice_config": {
+                            "prebuilt_voice_config": {
+                                "voice_name": voice_name
+                            }
+                        }
+                    }
+                }
+            )
+            
+            audio_data = None
+            if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+                for part in response.candidates[0].content.parts:
+                    if part.inline_data:
+                        audio_data = part.inline_data.data
+                        break
+            
+            if not audio_data:
+                raise Exception("No audio data returned by Gemini.")
+                
             return audio_data
-
+            
         except Exception as e:
-            print(f"CRITICAL ELEVENLABS EXCEPTION: {str(e)}", flush=True)
+            print(f"CRITICAL GEMINI VOICE EXCEPTION: {str(e)}", flush=True)
             raise e

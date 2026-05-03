@@ -6,7 +6,7 @@ import { Controls } from './components/Controls';
 import { Transcript } from './components/Transcript';
 import { TimeParticles } from './components/TimeParticles';
 import { generateCharacterResponse } from './services/gemini';
-import { generateElevenLabsSpeech } from './services/elevenlabs';
+import { generateVoiceSpeech } from './services/voice';
 
 type ViewMode = 'LOBBY' | 'ROOM';
 
@@ -98,7 +98,7 @@ export default function App() {
       }
 
       // Keys are now handled on backend, passed empty string or ignored
-      const audioBuffer = await generateElevenLabsSpeech(
+      const audioBuffer = await generateVoiceSpeech(
         text,
         char.voiceId, // Dynamic Voice ID
         '',           // Backend now handles API Key

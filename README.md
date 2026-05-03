@@ -3,7 +3,7 @@
 
 ![Google Cloud](https://img.shields.io/badge/Google_Cloud-Vertex_AI-blue?style=for-the-badge&logo=googlecloud)
 ![Gemini 3.0](https://img.shields.io/badge/AI_Model-Gemini_3.0_Pro-4285F4?style=for-the-badge&logo=google)
-![ElevenLabs](https://img.shields.io/badge/Voice_Engine-ElevenLabs_v3-orange?style=for-the-badge)
+![Voice Engine](https://img.shields.io/badge/Voice_Engine-Gemini_Voice-orange?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Live_&_Deployed-success?style=for-the-badge)
 
 ## 🚀 Links & Demo
@@ -21,10 +21,10 @@ We are submitting **TimeDial** to the following tracks:
 * **Why it matters:** Unlike standard chat apps, we leverage Gemini 3.0's superior **reasoning and roleplay capabilities** to maintain deep, historically accurate personas (Einstein, Cleopatra) that never break character, even when asked complex modern questions.
 * **Infrastructure:** The entire application is containerized with **Docker** and deployed on **Google Cloud Run** for serverless scalability.
 
-### 2. ElevenLabs Track (Conversational AI)
-* **Integration:** We use the latest **ElevenLabs v3 model** (via Python SDK) for ultra-low latency voice generation.
-* **Voice-First Experience:** The app is designed as a "Voice-First" interface. We implemented a streaming architecture where Gemini's text response is immediately converted to audio, allowing users to have a fluid, natural conversation with history.
-* **Emotional Range:** We utilized specific "Style Prompts" to give Einstein a thoughtful, slow-paced German accent and Cleopatra a commanding, regal tone.
+### 2. Gemini Multimodal Track (Voice Generation)
+* **Integration:** We use the native audio generation capability of Gemini 3.1 Pro for ultra-low latency, natively integrated voice responses.
+* **Voice-First Experience:** The app is designed as a "Voice-First" interface. We implemented a streaming architecture where Gemini generates audio responses natively, allowing users to have a fluid, natural conversation with history.
+* **Emotional Range:** We utilized specific prompt and voice combinations to map characters to expressive Gemini voices.
 
 ---
 
@@ -36,7 +36,7 @@ TimeDial is an educational time machine. Instead of reading boring textbooks, st
 
 ## 🛠️ Tech Stack
 * **AI Brain:** Google Vertex AI (Gemini 3.0 Pro)
-* **Voice:** ElevenLabs API (Turbo v2.5 / Multilingual v3)
+* **Voice:** Gemini 3.1 Pro (Audio Modality)
 * **Backend:** Python FastAPI (Async/Await)
 * **Frontend:** HTML5, TailwindCSS, Vanilla JS
 * **DevOps:** Docker, Google Cloud Run
@@ -51,8 +51,7 @@ TimeDial is an educational time machine. Instead of reading boring textbooks, st
 2. **Set up Environment Variables:**
 Create a `.env` file with your keys:
 ```env
-GOOGLE_PROJECT_ID=your_project_id
-ELEVENLABS_API_KEY=your_api_key
+GOOGLE_API_KEY=your_api_key
 PORT=8080
 ```
 

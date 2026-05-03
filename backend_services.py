@@ -141,6 +141,16 @@ class GeminiVoiceService:
                 import base64
                 audio_data = base64.b64decode(audio_data)
                 
+            # Gemini returns raw 16-bit PCM at 24000Hz. Add a proper WAV header so the browser can decode it.
+            import io, wave
+            with io.BytesIO() as wav_io:
+                with wave.open(wav_io, 'wb') as wav_file:
+                    wav_file.setnchannels(1)
+                    wav_file.setsampwidth(2)
+                    wav_file.setframerate(24000)
+                    wav_file.writeframes(audio_data)
+                audio_data = wav_io.getvalue()
+                
             return audio_data
             
         except Exception as e:

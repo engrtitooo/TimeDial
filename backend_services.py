@@ -25,7 +25,7 @@ class GeminiService:
         if GOOGLE_API_KEY:
             try:
                 self.client = genai.Client(api_key=GOOGLE_API_KEY)
-                self.model_name = os.getenv("GEMINI_MODEL_ID", "gemini-3.1-pro")
+                self.model_name = os.getenv("GEMINI_MODEL_ID", "gemini-2.0-flash")
             except Exception as e:
                 print(f"Gemini Client Init Warning: {e}")
                 self.client = None
@@ -111,9 +111,10 @@ class GeminiVoiceService:
                 "E4IXevHtHpKGh0bvrPPr": "Kore"      # Lovelace
             }
             voice_name = voice_map.get(voice_id, "Fenrir")
+            print(f"DEBUG: Generating TTS with voice: {voice_name}")
             
             response = client.models.generate_content(
-                model="gemini-3.1-flash-tts-preview",
+                model="gemini-2.0-flash",
                 contents=clean_text,
                 config={
                     "response_modalities": ["AUDIO"],

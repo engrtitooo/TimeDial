@@ -26,9 +26,9 @@ from auth_security import (
 from email_dispatcher import send_2fa_code, mask_email
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@timedial.app").strip()
-GEMINI_MODEL_ID = os.getenv("GEMINI_MODEL_ID", "gemini-3.1-pro").strip()
+GEMINI_MODEL_ID = os.getenv("GEMINI_MODEL_ID", "gemini-2.0-flash").strip()
 
-print("BOOT: Starting TimeDial server with Enterprise 2FA & Gemini 3.1 Pro...", flush=True)
+print("BOOT: Starting TimeDial server with Enterprise 2FA & Gemini 2.0 Flash...", flush=True)
 
 app = FastAPI(title="TimeDial Enterprise Backend")
 
@@ -297,7 +297,7 @@ async def handle_speech_request(request: Request, session: dict = Depends(get_cu
         print(f"SPEECH: Mapped to Gemini Voice: {voice_name}", flush=True)
 
         response = client.models.generate_content(
-            model="gemini-3.1-flash-tts-preview",
+            model="gemini-2.0-flash",
             contents=text,
             config={
                 "response_modalities": ["AUDIO"],

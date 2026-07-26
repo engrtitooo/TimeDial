@@ -8,8 +8,8 @@ try:
     client = genai.Client(api_key=api_key)
     
     response = client.models.generate_content(
-        model="gemini-3.1-pro-preview",
-        contents="Say hello",
+        model="gemini-2.0-flash",
+        contents="Say hello in 3 words.",
         config={
             "response_modalities": ["AUDIO"],
             "speech_config": {

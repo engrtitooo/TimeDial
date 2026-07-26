@@ -7,7 +7,7 @@ print("API Key exists:", bool(api_key))
 try:
     client = genai.Client(api_key=api_key)
     response = client.models.generate_content(
-        model="gemini-3.1-pro",
+        model="gemini-2.0-flash",
         contents="Say hello",
         config={
             "response_modalities": ["AUDIO"],

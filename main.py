@@ -149,11 +149,15 @@ async def verify_2fa(request: Request, response: Response):
     }
 
 @app.get("/api/check-auth")
-async def check_auth(request: Request):
+async def check_auth(request: Request, response: Response):
     """
     Server-side session validator endpoint.
     Validates HttpOnly cookie or Authorization Bearer header.
     """
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    
     token = request.cookies.get("session_token")
     if not token:
         auth_header = request.headers.get("Authorization")

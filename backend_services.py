@@ -25,7 +25,7 @@ class GeminiService:
         if GOOGLE_API_KEY:
             try:
                 self.client = genai.Client(api_key=GOOGLE_API_KEY)
-                self.model_name = "gemini-3.1-pro-preview"
+                self.model_name = os.getenv("GEMINI_MODEL_ID", "gemini-3.1-pro")
             except Exception as e:
                 print(f"Gemini Client Init Warning: {e}")
                 self.client = None

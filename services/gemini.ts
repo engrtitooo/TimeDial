@@ -17,6 +17,7 @@ export const generateCharacterResponse = async (
   try {
     const response = await fetch(`${BACKEND_URL}/chat`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json'
       },

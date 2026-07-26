@@ -10,6 +10,7 @@ export const generateVoiceSpeech = async (
   try {
     const response = await fetch(`${BACKEND_URL}/speech`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json'
       },

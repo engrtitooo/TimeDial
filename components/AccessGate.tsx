@@ -7,7 +7,7 @@ interface AccessGateProps {
   onLogoutRef?: (logoutFn: () => void) => void;
 }
 
-type AuthStep = 'CHECKING' | 'PASSWORD' | 'OTP';
+type AuthStep = 'CHECKING' | 'PASSWORD' | 'OTP' | 'AUTHENTICATED';
 
 export const AccessGate: React.FC<AccessGateProps> = ({ children }) => {
   const [step, setStep] = useState<AuthStep>('CHECKING');
@@ -53,7 +53,7 @@ export const AccessGate: React.FC<AccessGateProps> = ({ children }) => {
       if (response.ok) {
         const data = await response.json();
         if (data.authenticated) {
-          setStep('CHECKING'); // Will render children
+          setStep('AUTHENTICATED'); // Will render children
           setIsLoading(false);
           return;
         }
@@ -160,7 +160,7 @@ export const AccessGate: React.FC<AccessGateProps> = ({ children }) => {
   };
 
   // Render main app if authenticated
-  if (step === 'CHECKING' && !isLoading && !errorMsg && challengeToken === '') {
+  if (step === 'AUTHENTICATED') {
     // Verified session active
     return (
       <div className="relative">

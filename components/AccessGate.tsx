@@ -38,6 +38,16 @@ export const AccessGate: React.FC<AccessGateProps> = ({ children }) => {
       }
     });
 
+    // --- Strict Tab Close Auto-Logout Check ---
+    if (!sessionStorage.getItem('tab_session_active')) {
+      // Missing flag = New tab or reopened browser. Force destroy backend session.
+      fetch('/api/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+      localStorage.clear();
+      setStep('PASSWORD');
+      setIsLoading(false);
+      return;
+    }
+
     checkServerAuth();
   }, []);
 
@@ -131,6 +141,9 @@ export const AccessGate: React.FC<AccessGateProps> = ({ children }) => {
       }
 
       if (data.success) {
+        // Mark this specific tab as active
+        sessionStorage.setItem('tab_session_active', 'true');
+        
         // Re-check auth to confirm HttpOnly cookie validity
         await checkServerAuth();
       } else {
@@ -152,6 +165,7 @@ export const AccessGate: React.FC<AccessGateProps> = ({ children }) => {
     } catch (err) {
       console.error("Logout failed:", err);
     }
+    sessionStorage.removeItem('tab_session_active');
     setStep('PASSWORD');
     setPassword('');
     setOtpCode('');

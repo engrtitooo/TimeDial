@@ -176,7 +176,13 @@ async def check_auth(request: Request, response: Response):
 @app.post("/api/logout")
 async def logout(response: Response):
     """Logs out the user by invalidating and clearing the HttpOnly session cookie."""
-    response.delete_cookie(key="session_token", path="/")
+    response.delete_cookie(
+        key="session_token", 
+        path="/", 
+        httponly=True, 
+        samesite="lax", 
+        secure=True
+    )
     return {"success": True, "message": "Logged out successfully."}
 
 # ==========================================
